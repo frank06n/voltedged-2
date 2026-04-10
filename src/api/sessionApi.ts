@@ -1,4 +1,3 @@
-import { WORLD_HEIGHT, WORLD_WIDTH } from '../constants'
 import type {
   InventorySlotConfig,
   PlacedItem,
@@ -8,15 +7,16 @@ import type {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
-export async function startSession(code: string): Promise<SessionConfig> {
+export async function startSession(teamName: string, teamLeadName: string): Promise<SessionConfig> {
   const response = await fetch(`${API_BASE_URL}/api/session/start`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code: code.trim() || 'default' }),
+    body: JSON.stringify({ teamName: teamName.trim(), teamLeadName: teamLeadName.trim() }),
   });
   
   if (!response.ok) {
-    throw new Error('Failed to start session');
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || 'Failed to start session');
   }
 
   const json = await response.json();
@@ -61,9 +61,55 @@ export async function verifyPuzzle(sessionId: string, puzzleId: string, answer: 
   }
 }
 
+export async function getPuzzleQuestion(sessionId: string, puzzleId: string): Promise<{ success: boolean; question?: string; solved?: boolean; message?: string }> {
+  // Return cached result if available
+  const cacheKey = `${sessionId}_${puzzleId}`
+  if (puzzleQuestionCache.has(cacheKey)) {
+    return puzzleQuestionCache.get(cacheKey)!
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/session/puzzle/get`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, puzzleId }),
+    });
+
+    if (!response.ok) {
+      return { success: false, message: 'Server error' };
+    }
+
+    const result = await response.json();
+    if (result.success) {
+      puzzleQuestionCache.set(cacheKey, result)
+    }
+    return result;
+  } catch (err) {
+    console.error(err);
+    return { success: false, message: 'Network error' };
+  }
+}
+
+const puzzleQuestionCache = new Map<string, { success: boolean; question?: string; solved?: boolean; message?: string }>()
+
+export async function completeCircuit(sessionId: string): Promise<{ success: boolean; message?: string; completedAt?: string }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/session/circuit/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId }),
+    });
+
+    return await response.json();
+  } catch (err) {
+    console.error(err);
+    return { success: false, message: 'Network error' };
+  }
+}
+
 export type SessionSyncSnapshot = {
   sessionId: string | null
-  seed: string | null
+  teamName: string | null
   inventory: InventorySlotConfig[]
   placedItems: PlacedItem[]
   solvedPuzzleIds: string[]
@@ -72,7 +118,7 @@ export type SessionSyncSnapshot = {
 export function buildSessionSyncSnapshot(
   state: {
     sessionId: string | null
-    seed: string | null
+    teamName: string | null
     hotbar: { slots: { itemId: string; quantity: number }[] | (null | { itemId: string; quantity: number })[] }
     grid: { itemId: string | null; variant: string }[][]
     solvedPuzzleIds: string[]
@@ -101,7 +147,7 @@ export function buildSessionSyncSnapshot(
 
   return {
     sessionId: state.sessionId,
-    seed: state.seed,
+    teamName: state.teamName,
     inventory,
     placedItems,
     solvedPuzzleIds: state.solvedPuzzleIds,
@@ -109,10 +155,10 @@ export function buildSessionSyncSnapshot(
 }
 
 export async function syncSessionToApi(snapshot: SessionSyncSnapshot): Promise<void> {
-  if (!snapshot.sessionId || !snapshot.seed) return
+  if (!snapshot.sessionId || !snapshot.teamName) return
   await updateSession({
     sessionId: snapshot.sessionId,
-    seed: snapshot.seed,
+    teamName: snapshot.teamName,
     inventory: snapshot.inventory,
     placedItems: snapshot.placedItems,
     solvedPuzzleIds: snapshot.solvedPuzzleIds,

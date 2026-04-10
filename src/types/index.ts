@@ -46,7 +46,7 @@ export type GameState = {
   interactionZones: InteractionZone[]
   activeModal: InteractionZone | null
   sessionId: string | null
-  seed: string | null
+  teamName: string | null
   solvedPuzzleIds: string[]
   variantJustCycledCell: { row: number; col: number } | null
 

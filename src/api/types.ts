@@ -23,19 +23,22 @@ export type PlacedItem = {
 
 export type SessionConfig = {
   sessionId: string
-  seed: string
+  teamName: string
+  teamLeadName: string
+  shift: number
   worldWidth: number
   worldHeight: number
   playerStart: { x: number; y: number }
-  puzzles: PuzzleConfig[]
+  assignedPuzzleIds: string[]
   inventory: InventorySlotConfig[]
   placedItems: PlacedItem[]
   solvedPuzzleIds: string[]
+  circuitCompletedAt: string | null
 }
 
 export type SessionUpdate = {
   sessionId: string
-  seed: string
+  teamName: string
   inventory?: InventorySlotConfig[]
   placedItems?: PlacedItem[]
   solvedPuzzleIds?: string[]

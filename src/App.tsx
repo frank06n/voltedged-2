@@ -10,14 +10,16 @@ function App() {
   const [screen, setScreen] = useState<'start' | 'game' | 'loading'>('loading')
 
   useEffect(() => {
-    const savedSeed = localStorage.getItem('session_seed')
-    if (savedSeed) {
-      startSession(savedSeed).then(config => {
+    const savedTeamName = localStorage.getItem('session_teamName')
+    if (savedTeamName) {
+      // Re-login with the saved team name. teamLeadName isn't needed for
+      // returning sessions since the backend matches on teamName.
+      startSession(savedTeamName, 'returning').then(config => {
         useGameStore.getState().loadSession(config)
         setScreen('game')
       }).catch((e) => {
         console.error('Auto-login failed:', e)
-        localStorage.removeItem('session_seed')
+        localStorage.removeItem('session_teamName')
         setScreen('start')
       })
     } else {
