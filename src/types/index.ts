@@ -33,7 +33,7 @@ export type InteractionZone = {
   y: number
   width: number
   height: number
-  /** Question link from session payload (backend). */
+  /** Unused at zone creation; question link is loaded in the modal via POST /api/session/puzzle/get. */
   question: string
   rewardItems: { itemId: string; quantity: number }[]
   solved: boolean

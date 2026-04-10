@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { AssignedPuzzle, SessionConfig } from '../api/types'
+import type { SessionConfig } from '../api/types'
 import {
   GRID_COLS,
   GRID_ROWS,
@@ -32,22 +32,22 @@ function createEmptyGrid(): Tile[][] {
 }
 
 function puzzlesToZones(
-  assignedPuzzles: AssignedPuzzle[],
+  assignedPuzzleIds: string[],
   solvedIds: string[],
 ): InteractionZone[] {
-  return assignedPuzzles
-    .filter((p) => PUZZLE_LOCATIONS[p.id])
-    .map((p) => {
-      const loc = PUZZLE_LOCATIONS[p.id]
+  return assignedPuzzleIds
+    .filter((id) => PUZZLE_LOCATIONS[id])
+    .map((id) => {
+      const loc = PUZZLE_LOCATIONS[id]
       return {
-        id: p.id,
+        id,
         x: loc.x,
         y: loc.y,
         width: loc.width,
         height: loc.height,
-        question: p.question,
+        question: '',
         rewardItems: loc.rewardItems,
-        solved: solvedIds.includes(p.id),
+        solved: solvedIds.includes(id),
       }
     })
 }
@@ -120,11 +120,7 @@ export const useGameStore = create<GameState>((set) => ({
   loadSession: (config) => {
     const empty = createEmptyGrid()
     const grid = applyPlacedItems(empty, config.placedItems)
-    const assignedPuzzles =
-      config.assignedPuzzles && config.assignedPuzzles.length > 0
-        ? config.assignedPuzzles
-        : config.assignedPuzzleIds.map((id) => ({ id, question: '' }))
-    const zones = puzzlesToZones(assignedPuzzles, config.solvedPuzzleIds)
+    const zones = puzzlesToZones(config.assignedPuzzleIds, config.solvedPuzzleIds)
 
     set({
       player: {

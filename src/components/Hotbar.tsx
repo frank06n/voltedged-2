@@ -37,6 +37,7 @@ export function Hotbar() {
                     className="item-swatch item-swatch-img"
                     src={getComponentImage(slot.itemId)}
                     alt=""
+                    draggable={false}
                     title={getComponentDisplayName(slot.itemId)}
                   />
                 ) : (

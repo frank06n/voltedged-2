@@ -48,6 +48,28 @@ export async function updateSession(update: SessionUpdate): Promise<void> {
   }
 }
 
+export async function getPuzzleQuestion(
+  sessionId: string,
+  puzzleId: string,
+): Promise<{ success: boolean; question?: string; solved?: boolean; message?: string }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/session/puzzle/get`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, puzzleId }),
+    })
+
+    if (!response.ok) {
+      return { success: false, message: 'Server error' }
+    }
+
+    return await response.json()
+  } catch (err) {
+    console.error(err)
+    return { success: false, message: 'Network error' }
+  }
+}
+
 export async function verifyPuzzle(sessionId: string, puzzleId: string, answer: string): Promise<{ success: boolean; message?: string; inventory?: InventorySlotConfig[]; solvedPuzzleIds?: string[] }> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/session/puzzle/verify`, {

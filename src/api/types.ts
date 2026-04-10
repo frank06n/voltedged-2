@@ -1,9 +1,3 @@
-export type AssignedPuzzle = {
-  id: string
-  /** Question document URL from the server (no answer). */
-  question: string
-}
-
 export type InventorySlotConfig = {
   itemId: string
   quantity: number
@@ -25,10 +19,8 @@ export type SessionConfig = {
   worldWidth: number
   worldHeight: number
   playerStart: { x: number; y: number }
-  /** Redundant list of ids; same order as `assignedPuzzles`. */
+  /** Which puzzles are active this session; question links loaded on demand via /puzzle/get. */
   assignedPuzzleIds: string[]
-  /** From API only: puzzle id + question link. Bounds/rewards come from `PUZZLE_LOCATIONS` on the client. */
-  assignedPuzzles?: AssignedPuzzle[]
   inventory: InventorySlotConfig[]
   placedItems: PlacedItem[]
   solvedPuzzleIds: string[]
