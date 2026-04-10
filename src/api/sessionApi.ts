@@ -45,9 +45,9 @@ function defaultPuzzles(): SessionConfig['puzzles'] {
       y: 480,
       width: 96,
       height: 96,
-      question: 'I amplify signals. What am I?',
-      correctAnswer: 'transistor',
-      rewardItems: [{ itemId: 'transistor', quantity: 2 }],
+      question: 'I store energy in a magnetic field. What am I?',
+      correctAnswer: 'inductor',
+      rewardItems: [{ itemId: 'inductor', quantity: 2 }],
     },
     {
       id: 'z4',
@@ -55,9 +55,9 @@ function defaultPuzzles(): SessionConfig['puzzles'] {
       y: 992,
       width: 160,
       height: 160,
-      question: 'You flip me to open or close a circuit. What am I?',
-      correctAnswer: 'switch',
-      rewardItems: [{ itemId: 'switch', quantity: 2 }],
+      question: 'I let current flow one way only. What am I?',
+      correctAnswer: 'diode',
+      rewardItems: [{ itemId: 'diode', quantity: 2 }],
     },
     {
       id: 'z5',
@@ -65,15 +65,15 @@ function defaultPuzzles(): SessionConfig['puzzles'] {
       y: 1984,
       width: 96,
       height: 96,
-      question: 'I glow when current passes through me. What am I?',
-      correctAnswer: 'bulb',
-      rewardItems: [{ itemId: 'bulb', quantity: 2 }],
+      question: 'I provide a fixed DC voltage between my terminals. What am I?',
+      correctAnswer: 'dc_source',
+      rewardItems: [{ itemId: 'dc_source', quantity: 2 }],
     },
   ]
 }
 
 function defaultInventory(): InventorySlotConfig[] {
-  return []
+  return [{ itemId: 'wire', quantity: 99 }]
 }
 
 function createFreshSession(seed: string): SessionConfig {
@@ -151,7 +151,7 @@ export function buildSessionSyncSnapshot(
     sessionId: string | null
     seed: string | null
     hotbar: { slots: { itemId: string; quantity: number }[] | (null | { itemId: string; quantity: number })[] }
-    grid: { itemId: string | null; variant: string }[][]
+    grid: { itemId: string | null; variant: string; orientation: number }[][]
     solvedPuzzleIds: string[]
   },
 ): SessionSyncSnapshot {
@@ -166,11 +166,13 @@ export function buildSessionSyncSnapshot(
       const id = state.grid[r][c].itemId
       if (id) {
         const variant = state.grid[r][c].variant
+        const orientation = state.grid[r][c].orientation
         placedItems.push({
           row: r,
           col: c,
           itemId: id,
           ...(variant ? { variant } : {}),
+          ...(orientation !== 0 ? { orientation } : {}),
         })
       }
     }

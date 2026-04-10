@@ -14,6 +14,7 @@ export type Camera = {
 export type Tile = {
   itemId: string | null
   variant: string
+  orientation: number
 }
 
 export type InventorySlot = {
@@ -63,5 +64,6 @@ export type GameState = {
   markZoneSolved: (zoneId: string) => void
   addRewardItems: (items: { itemId: string; quantity: number }[]) => void
   cycleVariant: (row: number, col: number) => boolean
+  cycleOrientation: (row: number, col: number) => boolean
   clearVariantJustCycled: () => void
 }

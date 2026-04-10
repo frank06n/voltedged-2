@@ -82,12 +82,48 @@ export function Game() {
       if (state.activeModal) return
 
       const k = e.key.toLowerCase()
-      if (k >= '1' && k <= '8') {
+
+      if (e.shiftKey && k >= '1' && k <= '6') {
+        const idx = 9 + Number.parseInt(k, 10)
+        state.setHotbarActive(idx)
+        e.preventDefault()
+        return
+      }
+
+      if (k >= '1' && k <= '9') {
         const idx = Number.parseInt(k, 10) - 1
         state.setHotbarActive(idx)
         e.preventDefault()
         return
       }
+
+      if (k === '0') {
+        state.setHotbarActive(9)
+        e.preventDefault()
+        return
+      }
+
+      if (k === 'r') {
+        const hw = hoverWorldRef.current
+        if (hw) {
+          const { gridCol, gridRow } = worldToGrid(hw.x, hw.y)
+          if (
+            isInsidePlacementZone(hw.x, hw.y) &&
+            isValidCell(gridRow, gridCol)
+          ) {
+            const cell = state.grid[gridRow][gridCol]
+            if (cell.itemId) {
+              if (state.cycleOrientation(gridRow, gridCol)) {
+                e.preventDefault()
+                fireSync()
+                return
+              }
+            }
+          }
+        }
+        return
+      }
+
       if (k === 'e') {
         const hw = hoverWorldRef.current
         if (hw) {

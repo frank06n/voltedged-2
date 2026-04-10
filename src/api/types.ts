@@ -19,6 +19,7 @@ export type PlacedItem = {
   col: number
   itemId: string
   variant?: string
+  orientation?: number
 }
 
 export type SessionConfig = {

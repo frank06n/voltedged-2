@@ -10,7 +10,7 @@ import {
 } from '../constants'
 import {
   getItemVariantOptions,
-  initialVariantForItem,
+  initialVariantForComponent,
 } from '../data/itemDefinitions'
 import {
   addItems,
@@ -22,7 +22,11 @@ import type { GameState, InteractionZone, Tile } from '../types'
 
 function createEmptyGrid(): Tile[][] {
   return Array.from({ length: GRID_ROWS }, () =>
-    Array.from({ length: GRID_COLS }, () => ({ itemId: null, variant: '' })),
+    Array.from({ length: GRID_COLS }, () => ({
+      itemId: null,
+      variant: '',
+      orientation: 0,
+    })),
   )
 }
 
@@ -56,10 +60,13 @@ function applyPlacedItems(grid: Tile[][], placed: SessionConfig['placedItems']):
       const variant =
         p.variant !== undefined && p.variant !== ''
           ? p.variant
-          : initialVariantForItem(itemId)
+          : initialVariantForComponent(itemId)
+      const orientation = p.orientation ?? 0
       next = next.map((r, ri) =>
         ri === row
-          ? r.map((c, ci) => (ci === col ? { itemId, variant } : c))
+          ? r.map((c, ci) =>
+              ci === col ? { itemId, variant, orientation } : c,
+            )
           : r,
       )
     }
@@ -204,7 +211,13 @@ export const useGameStore = create<GameState>((set) => ({
       const newGrid = state.grid.map((r, ri) =>
         ri === row
           ? r.map((c, ci) =>
-              ci === col ? { itemId, variant: nextVariant } : c,
+              ci === col
+                ? {
+                    itemId,
+                    variant: nextVariant,
+                    orientation: cell.orientation,
+                  }
+                : c,
             )
           : r,
       )
@@ -214,6 +227,45 @@ export const useGameStore = create<GameState>((set) => ({
       }
     })
     return cycled
+  },
+
+  cycleOrientation: (row, col) => {
+    let ok = false
+    set((state) => {
+      if (
+        row < 0 ||
+        row >= GRID_ROWS ||
+        col < 0 ||
+        col >= GRID_COLS
+      ) {
+        return state
+      }
+      const cell = state.grid[row][col]
+      const itemId = cell.itemId
+      if (!itemId) return state
+      if (itemId === 'wire') return state
+
+      ok = true
+      const nextO = (cell.orientation + 1) % 4
+      const newGrid = state.grid.map((r, ri) =>
+        ri === row
+          ? r.map((c, ci) =>
+              ci === col
+                ? {
+                    itemId,
+                    variant: cell.variant,
+                    orientation: nextO,
+                  }
+                : c,
+            )
+          : r,
+      )
+      return {
+        grid: newGrid,
+        variantJustCycledCell: { row, col },
+      }
+    })
+    return ok
   },
 
   clearVariantJustCycled: () => set({ variantJustCycledCell: null }),
