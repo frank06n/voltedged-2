@@ -127,6 +127,14 @@ body,
   z-index: 8;
 }
 
+.placement-zone {
+  position: absolute;
+  background: rgba(100, 180, 255, 0.08);
+  border: 1px dashed rgba(100, 180, 255, 0.25);
+  z-index: 2;
+  pointer-events: none;
+}
+
 .interaction-zone {
   position: absolute;
   background: rgba(255, 200, 0, 0.15);

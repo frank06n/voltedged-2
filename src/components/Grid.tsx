@@ -1,5 +1,6 @@
-import { TILE_SIZE, WORLD_HEIGHT, WORLD_WIDTH } from '../constants'
+import { TILE_SIZE } from '../constants'
 import { getItemColor, isValidCell } from '../systems/gridSystem'
+import { isInsidePlacementZone } from '../systems/placementZones'
 import { useGameStore } from '../store/gameState'
 
 type GridProps = {
@@ -30,7 +31,7 @@ export function Grid({
   }
 
   let hoverHighlight: { left: number; top: number } | null = null
-  if (hoverWorld) {
+  if (hoverWorld && isInsidePlacementZone(hoverWorld.x, hoverWorld.y)) {
     const col = Math.floor(hoverWorld.x / TILE_SIZE)
     const row = Math.floor(hoverWorld.y / TILE_SIZE)
     if (isValidCell(row, col)) {
@@ -40,13 +41,6 @@ export function Grid({
       }
     }
   }
-
-  const inWorld =
-    hoverWorld &&
-    hoverWorld.x >= 0 &&
-    hoverWorld.x < WORLD_WIDTH &&
-    hoverWorld.y >= 0 &&
-    hoverWorld.y < WORLD_HEIGHT
 
   return (
     <>
@@ -61,7 +55,7 @@ export function Grid({
           }}
         />
       ))}
-      {hoverHighlight && inWorld && (
+      {hoverHighlight ? (
         <div
           className="hover-highlight"
           style={{
@@ -69,7 +63,7 @@ export function Grid({
             top: hoverHighlight.top,
           }}
         />
-      )}
+      ) : null}
     </>
   )
 }

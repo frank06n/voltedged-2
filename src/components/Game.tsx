@@ -3,9 +3,9 @@ import { buildSessionSyncSnapshot, syncSessionToApi } from '../api/sessionApi'
 import { useGameLoop } from '../hooks/useGameLoop'
 import { useKeyboard } from '../hooks/useKeyboard'
 import { useMouse } from '../hooks/useMouse'
-import { canPlaceItem } from '../systems/inventorySystem'
 import { updateCamera } from '../systems/cameraSystem'
 import { findActiveZone } from '../systems/interactionSystem'
+import { canPlaceAt, canRemoveAt } from '../systems/placementValidation'
 import {
   isValidCell,
   placeItem,
@@ -125,7 +125,10 @@ export function Game() {
 
     if (e.button === 2) {
       e.preventDefault()
-      if (cell.itemId) {
+      if (
+        canRemoveAt(worldX, worldY, gridRow, gridCol, grid) &&
+        cell.itemId
+      ) {
         const itemId = cell.itemId
         setGrid(removeItem(grid, gridRow, gridCol))
         returnItem(itemId)
@@ -137,16 +140,30 @@ export function Game() {
     if (e.button !== 0) return
 
     if (cell.itemId) {
-      const itemId = cell.itemId
-      setGrid(removeItem(grid, gridRow, gridCol))
-      returnItem(itemId)
-      fireSync()
+      if (canRemoveAt(worldX, worldY, gridRow, gridCol, grid)) {
+        const itemId = cell.itemId
+        setGrid(removeItem(grid, gridRow, gridCol))
+        returnItem(itemId)
+        fireSync()
+      }
+      return
+    }
+
+    if (
+      !canPlaceAt(
+        worldX,
+        worldY,
+        gridRow,
+        gridCol,
+        grid,
+        hotbar.slots,
+        hotbar.activeIndex,
+      )
+    ) {
       return
     }
 
     const idx = hotbar.activeIndex
-    if (!canPlaceItem(hotbar.slots, idx)) return
-
     const slot = hotbar.slots[idx]
     if (!slot) return
 

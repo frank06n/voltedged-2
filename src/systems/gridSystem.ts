@@ -5,6 +5,11 @@ const ITEM_COLORS: Record<string, string> = {
   wood: '#8B4513',
   stone: '#808080',
   brick: '#B22222',
+  resistor: '#e6a846',
+  capacitor: '#5b9bd5',
+  transistor: '#70ad47',
+  thyristor: '#c55a11',
+  diode: '#7030a0',
 }
 
 export function getItemColor(itemId: string): string {

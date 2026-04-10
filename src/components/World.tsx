@@ -1,3 +1,7 @@
+import {
+  PLACEMENT_ZONES,
+  SHOW_PLACEMENT_ZONES,
+} from '../systems/placementZones'
 import { useGameStore } from '../store/gameState'
 import { Grid } from './Grid'
 import { Player } from './Player'
@@ -21,18 +25,33 @@ export function World({ hoverWorld, viewportWidth, viewportHeight }: WorldProps)
       }}
     >
       <WorldBackground />
-      {interactionZones.map((zone) => (
-        <div
-          key={zone.id}
-          className={`interaction-zone${zone.solved ? ' solved' : ''}`}
-          style={{
-            left: zone.x,
-            top: zone.y,
-            width: zone.width,
-            height: zone.height,
-          }}
-        />
-      ))}
+      {SHOW_PLACEMENT_ZONES &&
+        PLACEMENT_ZONES.map((pz) => (
+          <div
+            key={pz.id}
+            className="placement-zone"
+            style={{
+              left: pz.x,
+              top: pz.y,
+              width: pz.width,
+              height: pz.height,
+            }}
+          />
+        ))}
+      {interactionZones
+        .filter((z) => z.visible)
+        .map((zone) => (
+          <div
+            key={zone.id}
+            className={`interaction-zone${zone.solved ? ' solved' : ''}`}
+            style={{
+              left: zone.x,
+              top: zone.y,
+              width: zone.width,
+              height: zone.height,
+            }}
+          />
+        ))}
       <Grid
         hoverWorld={hoverWorld}
         viewportWidth={viewportWidth}

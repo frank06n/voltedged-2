@@ -11,12 +11,24 @@ export function useKeyboard() {
       keys.current[e.key.toLowerCase()] = false
     }
 
+    const resetKeys = () => {
+      keys.current = {}
+    }
+
+    const onVisibilityChange = () => {
+      if (document.hidden) resetKeys()
+    }
+
     window.addEventListener('keydown', down)
     window.addEventListener('keyup', up)
+    window.addEventListener('blur', resetKeys)
+    document.addEventListener('visibilitychange', onVisibilityChange)
 
     return () => {
       window.removeEventListener('keydown', down)
       window.removeEventListener('keyup', up)
+      window.removeEventListener('blur', resetKeys)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   }, [])
 

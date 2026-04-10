@@ -35,6 +35,7 @@ export type InteractionZone = {
   correctAnswer: string
   rewardItems: { itemId: string; quantity: number }[]
   solved: boolean
+  visible: boolean
 }
 
 export type GameState = {
