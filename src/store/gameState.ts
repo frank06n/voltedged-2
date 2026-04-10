@@ -19,6 +19,7 @@ import {
   returnToInventory,
 } from '../systems/inventorySystem'
 import type { GameState, InteractionZone, Tile } from '../types'
+import { PUZZLE_LOCATIONS } from '../data/puzzleLocations'
 
 function createEmptyGrid(): Tile[][] {
   return Array.from({ length: GRID_ROWS }, () =>
@@ -27,20 +28,24 @@ function createEmptyGrid(): Tile[][] {
 }
 
 function puzzlesToZones(
-  puzzles: SessionConfig['puzzles'],
+  assignedPuzzleIds: string[],
   solvedIds: string[],
 ): InteractionZone[] {
-  return puzzles.map((p) => ({
-    id: p.id,
-    x: p.x,
-    y: p.y,
-    width: p.width,
-    height: p.height,
-    question: p.question,
-    correctAnswer: p.correctAnswer,
-    rewardItems: p.rewardItems,
-    solved: solvedIds.includes(p.id),
-  }))
+  return assignedPuzzleIds
+    .filter((id) => PUZZLE_LOCATIONS[id])
+    .map((id) => {
+      const loc = PUZZLE_LOCATIONS[id]
+      return {
+        id,
+        x: loc.x,
+        y: loc.y,
+        width: loc.width,
+        height: loc.height,
+        question: '', // fetched on-demand from backend
+        rewardItems: loc.rewardItems,
+        solved: solvedIds.includes(id),
+      }
+    })
 }
 
 function applyPlacedItems(grid: Tile[][], placed: SessionConfig['placedItems']): Tile[][] {
@@ -82,7 +87,7 @@ export const useGameStore = create<GameState>((set) => ({
   interactionZones: [],
   activeModal: null,
   sessionId: null,
-  seed: null,
+  teamName: null,
   solvedPuzzleIds: [],
   variantJustCycledCell: null,
 
@@ -108,7 +113,7 @@ export const useGameStore = create<GameState>((set) => ({
   loadSession: (config) => {
     const empty = createEmptyGrid()
     const grid = applyPlacedItems(empty, config.placedItems)
-    const zones = puzzlesToZones(config.puzzles, config.solvedPuzzleIds)
+    const zones = puzzlesToZones(config.assignedPuzzleIds, config.solvedPuzzleIds)
 
     set({
       player: {
@@ -125,7 +130,7 @@ export const useGameStore = create<GameState>((set) => ({
       interactionZones: zones,
       activeModal: null,
       sessionId: config.sessionId,
-      seed: config.seed,
+      teamName: config.teamName,
       solvedPuzzleIds: [...config.solvedPuzzleIds],
       variantJustCycledCell: null,
     })

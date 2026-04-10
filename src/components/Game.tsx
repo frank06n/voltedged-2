@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { buildSessionSyncSnapshot, syncSessionToApi } from '../api/sessionApi'
+import { buildSessionSyncSnapshot, completeCircuit, syncSessionToApi } from '../api/sessionApi'
 import { getItemVariantOptions } from '../data/itemDefinitions'
 import { useGameLoop } from '../hooks/useGameLoop'
 import { useKeyboard } from '../hooks/useKeyboard'
@@ -19,11 +19,10 @@ import { Hotbar } from './Hotbar'
 import { InteractionModal } from './InteractionModal'
 import { World } from './World'
 
-function fireSync() {
-  void syncSessionToApi(buildSessionSyncSnapshot(useGameStore.getState()))
-}
+const SYNC_COOLDOWN_MS = 5000    // 5s cooldown for sync
+const CIRCUIT_COOLDOWN_MS = 10000 // 10s cooldown for circuit complete
 
-export function Game() {
+export function Game({ onLogout }: { onLogout: () => void }) {
   const keysRef = useKeyboard()
   const { mousePos, screenToWorld, worldToGrid } = useMouse()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -43,6 +42,64 @@ export function Game() {
     width: typeof window !== 'undefined' ? window.innerWidth : 800,
     height: typeof window !== 'undefined' ? window.innerHeight : 600,
   }))
+
+  const [circuitDone, setCircuitDone] = useState(false)
+  const [circuitMsg, setCircuitMsg] = useState('')
+
+  // Sync button state
+  const [syncing, setSyncing] = useState(false)
+  const [syncCooldown, setSyncCooldown] = useState(false)
+  const [syncMsg, setSyncMsg] = useState('')
+
+  // Circuit cooldown state
+  const [circuitCooldown, setCircuitCooldown] = useState(false)
+
+  const handleLogout = async () => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+      await fetch(`${API_BASE_URL}/api/session/logout`, { method: 'POST' });
+    } catch {
+      // ignore network errors
+    }
+    localStorage.removeItem('session_teamName');
+    onLogout();
+  }
+
+  const handleSync = async () => {
+    if (syncing || syncCooldown) return
+    setSyncing(true)
+    setSyncMsg('')
+    try {
+      await syncSessionToApi(buildSessionSyncSnapshot(useGameStore.getState()))
+      setSyncMsg('Synced!')
+    } catch {
+      setSyncMsg('Sync failed')
+    }
+    setSyncing(false)
+    setSyncCooldown(true)
+    setTimeout(() => setSyncCooldown(false), SYNC_COOLDOWN_MS)
+    setTimeout(() => setSyncMsg(''), 3000)
+  }
+
+  const handleCircuitComplete = async () => {
+    if (circuitCooldown || circuitDone) return
+    const sessionId = useGameStore.getState().sessionId
+    if (!sessionId) return
+
+    // First sync the circuit state
+    await syncSessionToApi(buildSessionSyncSnapshot(useGameStore.getState()))
+
+    const res = await completeCircuit(sessionId)
+    if (res.success) {
+      setCircuitDone(true)
+      setCircuitMsg(`Circuit completed at ${new Date(res.completedAt!).toLocaleTimeString()}`)
+    } else {
+      setCircuitMsg(res.message || 'Failed')
+      // Start cooldown on failure
+      setCircuitCooldown(true)
+      setTimeout(() => setCircuitCooldown(false), CIRCUIT_COOLDOWN_MS)
+    }
+  }
 
   useEffect(() => {
     const update = () => {
@@ -104,7 +161,6 @@ export function Game() {
             ) {
               if (state.cycleVariant(gridRow, gridCol)) {
                 e.preventDefault()
-                fireSync()
                 return
               }
             }
@@ -161,7 +217,6 @@ export function Game() {
         const itemId = cell.itemId
         setGrid(removeItem(grid, gridRow, gridCol))
         returnItem(itemId)
-        fireSync()
       }
       return
     }
@@ -173,7 +228,6 @@ export function Game() {
         const itemId = cell.itemId
         setGrid(removeItem(grid, gridRow, gridCol))
         returnItem(itemId)
-        fireSync()
       }
       return
     }
@@ -201,7 +255,18 @@ export function Game() {
 
     if (!consumeItem(idx)) return
     setGrid(placed)
-    fireSync()
+  }
+
+  const btnBase: React.CSSProperties = {
+    position: 'absolute',
+    top: '16px',
+    zIndex: 1000,
+    color: 'white',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '4px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
   }
 
   return (
@@ -225,6 +290,57 @@ export function Game() {
       />
       <Hotbar />
       <InteractionModal />
+
+      {/* Logout */}
+      <button 
+        onClick={handleLogout} 
+        style={{ ...btnBase, right: '16px', background: 'rgba(255, 50, 50, 0.8)' }}
+      >
+        Logout
+      </button>
+
+      {/* Sync Circuit */}
+      <button
+        onClick={handleSync}
+        disabled={syncing || syncCooldown}
+        style={{
+          ...btnBase,
+          right: '100px',
+          background: syncing ? 'rgba(200, 200, 50, 0.8)' : syncCooldown ? 'rgba(100, 100, 100, 0.6)' : 'rgba(50, 200, 150, 0.8)',
+          cursor: (syncing || syncCooldown) ? 'default' : 'pointer',
+        }}
+      >
+        {syncing ? 'Syncing…' : syncCooldown ? 'Wait…' : '⟳ Sync'}
+      </button>
+
+      {/* Complete Circuit */}
+      <button
+        onClick={handleCircuitComplete}
+        disabled={circuitDone || circuitCooldown}
+        style={{
+          ...btnBase,
+          right: '200px',
+          background: circuitDone ? 'rgba(50, 200, 50, 0.8)' : circuitCooldown ? 'rgba(100, 100, 100, 0.6)' : 'rgba(50, 150, 255, 0.8)',
+          cursor: (circuitDone || circuitCooldown) ? 'default' : 'pointer',
+        }}
+      >
+        {circuitDone ? '✓ Circuit Done' : circuitCooldown ? 'Wait 10s…' : 'Complete Circuit'}
+      </button>
+
+      {/* Status messages */}
+      {(syncMsg || circuitMsg) && (
+        <div style={{
+          position: 'absolute',
+          top: '56px',
+          right: '100px',
+          zIndex: 1000,
+          background: 'rgba(0,0,0,0.7)',
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '4px',
+          fontSize: '0.85rem'
+        }}>{syncMsg || circuitMsg}</div>
+      )}
     </div>
   )
 }
