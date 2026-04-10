@@ -23,7 +23,7 @@ function fireSync() {
   void syncSessionToApi(buildSessionSyncSnapshot(useGameStore.getState()))
 }
 
-export function Game() {
+export function Game({ onLogout }: { onLogout: () => void }) {
   const keysRef = useKeyboard()
   const { mousePos, screenToWorld, worldToGrid } = useMouse()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -43,6 +43,17 @@ export function Game() {
     width: typeof window !== 'undefined' ? window.innerWidth : 800,
     height: typeof window !== 'undefined' ? window.innerHeight : 600,
   }))
+
+  const handleLogout = async () => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+      await fetch(`${API_BASE_URL}/api/session/logout`, { method: 'POST' });
+    } catch {
+      // ignore network errors
+    }
+    localStorage.removeItem('session_seed');
+    onLogout();
+  }
 
   useEffect(() => {
     const update = () => {
@@ -225,6 +236,24 @@ export function Game() {
       />
       <Hotbar />
       <InteractionModal />
+      <button 
+        onClick={handleLogout} 
+        style={{
+          position: 'absolute',
+          top: '16px',
+          right: '16px',
+          zIndex: 1000,
+          background: 'rgba(255, 50, 50, 0.8)',
+          color: 'white',
+          border: 'none',
+          padding: '8px 16px',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontWeight: 'bold'
+        }}
+      >
+        Logout
+      </button>
     </div>
   )
 }

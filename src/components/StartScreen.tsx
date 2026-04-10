@@ -16,6 +16,7 @@ export function StartScreen({ onSessionStart }: StartScreenProps) {
     setLoading(true)
     try {
       const config = await startSession(code)
+      localStorage.setItem('session_seed', config.seed)
       onSessionStart(config)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to start session')

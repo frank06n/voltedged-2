@@ -36,18 +36,28 @@ export function InteractionModal() {
     void syncSessionToApi(buildSessionSyncSnapshot(useGameStore.getState()))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (activeModal.solved) {
       handleClose()
       return
     }
 
-    const guess = answer.trim().toLowerCase()
-    const expected = activeModal.correctAnswer.trim().toLowerCase()
-    if (guess === expected) {
+    const guess = answer.trim()
+    const sessionId = useGameStore.getState().sessionId
+    if (!sessionId) return
+    
+    const { verifyPuzzle } = await import('../api/sessionApi')
+    const res = await verifyPuzzle(sessionId, activeModal.id, guess)
+
+    if (res.success && res.inventory && res.solvedPuzzleIds) {
       setFeedback('correct')
+      
       markZoneSolved(activeModal.id)
-      addRewardItems(activeModal.rewardItems)
+      
+      if (activeModal.rewardItems) {
+         addRewardItems(activeModal.rewardItems)
+      }
+      
       fireSync()
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
       closeTimerRef.current = window.setTimeout(() => {
@@ -70,8 +80,7 @@ export function InteractionModal() {
         <div className="modal-content">
           <h2 id="puzzle-title">{activeModal.question}</h2>
           <p className="modal-solved-text">
-            Completed. Answer:{' '}
-            <strong>{activeModal.correctAnswer}</strong>
+            Completed.
           </p>
           <div className="modal-actions">
             <button type="button" className="secondary" onClick={handleClose}>

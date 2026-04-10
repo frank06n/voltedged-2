@@ -33,7 +33,7 @@ export type InteractionZone = {
   width: number
   height: number
   question: string
-  correctAnswer: string
+  correctAnswer?: string
   rewardItems: { itemId: string; quantity: number }[]
   solved: boolean
 }

@@ -6,136 +6,59 @@ import type {
   SessionUpdate,
 } from './types'
 
-function storageKey(seed: string): string {
-  return `game_session_${seed.trim() || 'default'}`
-}
-
-function newSessionId(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-  return `sess_${Date.now()}_${Math.random().toString(36).slice(2)}`
-}
-
-function defaultPuzzles(): SessionConfig['puzzles'] {
-  return [
-    {
-      id: 'z1',
-      x: 384,
-      y: 288,
-      width: 96,
-      height: 96,
-      question: 'I resist current. What am I?',
-      correctAnswer: 'resistor',
-      rewardItems: [{ itemId: 'resistor', quantity: 2 }],
-    },
-    {
-      id: 'z2',
-      x: 800,
-      y: 576,
-      width: 128,
-      height: 128,
-      question: 'I store electric charge. What am I?',
-      correctAnswer: 'capacitor',
-      rewardItems: [{ itemId: 'capacitor', quantity: 2 }],
-    },
-    {
-      id: 'z3',
-      x: 1184,
-      y: 480,
-      width: 96,
-      height: 96,
-      question: 'I amplify signals. What am I?',
-      correctAnswer: 'transistor',
-      rewardItems: [{ itemId: 'transistor', quantity: 2 }],
-    },
-    {
-      id: 'z4',
-      x: 1984,
-      y: 992,
-      width: 160,
-      height: 160,
-      question: 'You flip me to open or close a circuit. What am I?',
-      correctAnswer: 'switch',
-      rewardItems: [{ itemId: 'switch', quantity: 2 }],
-    },
-    {
-      id: 'z5',
-      x: 2496,
-      y: 1984,
-      width: 96,
-      height: 96,
-      question: 'I glow when current passes through me. What am I?',
-      correctAnswer: 'bulb',
-      rewardItems: [{ itemId: 'bulb', quantity: 2 }],
-    },
-  ]
-}
-
-function defaultInventory(): InventorySlotConfig[] {
-  return []
-}
-
-function createFreshSession(seed: string): SessionConfig {
-  return {
-    sessionId: newSessionId(),
-    seed: seed.trim() || 'default',
-    worldWidth: WORLD_WIDTH,
-    worldHeight: WORLD_HEIGHT,
-    playerStart: { x: 1500, y: 1500 },
-    puzzles: defaultPuzzles(),
-    inventory: defaultInventory(),
-    placedItems: [],
-    solvedPuzzleIds: [],
-  }
-}
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 export async function startSession(code: string): Promise<SessionConfig> {
-  const seed = code.trim() || 'default'
-  const key = storageKey(seed)
-
-  await Promise.resolve()
-
-  try {
-    const existing = localStorage.getItem(key)
-    if (existing) {
-      return JSON.parse(existing) as SessionConfig
-    }
-  } catch {
-    // fall through to create fresh
+  const response = await fetch(`${API_BASE_URL}/api/session/start`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: code.trim() || 'default' }),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to start session');
   }
 
-  const config = createFreshSession(seed)
-  localStorage.setItem(key, JSON.stringify(config))
-  return config
+  const json = await response.json();
+  if (!json.success) {
+    throw new Error(json.message || 'Failed to start session');
+  }
+
+  return json.data as SessionConfig;
 }
 
 export async function updateSession(update: SessionUpdate): Promise<void> {
-  await Promise.resolve()
-
-  const key = storageKey(update.seed)
-  const raw = localStorage.getItem(key)
-  if (!raw) return
-
-  let existing: SessionConfig
-  try {
-    existing = JSON.parse(raw) as SessionConfig
-  } catch {
-    return
-  }
-
-  if (existing.sessionId !== update.sessionId) return
-
-  const merged: SessionConfig = {
-    ...existing,
-    ...(update.inventory !== undefined && { inventory: update.inventory }),
-    ...(update.placedItems !== undefined && { placedItems: update.placedItems }),
-    ...(update.solvedPuzzleIds !== undefined && {
-      solvedPuzzleIds: update.solvedPuzzleIds,
+  const response = await fetch(`${API_BASE_URL}/api/session/update`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sessionId: update.sessionId,
+      placedItems: update.placedItems,
     }),
-  }
+  });
 
-  localStorage.setItem(key, JSON.stringify(merged))
+  if (!response.ok) {
+    console.error('Failed to update session');
+  }
+}
+
+export async function verifyPuzzle(sessionId: string, puzzleId: string, answer: string): Promise<{ success: boolean; message?: string; inventory?: InventorySlotConfig[]; solvedPuzzleIds?: string[] }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/session/puzzle/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, puzzleId, answer }),
+    });
+
+    if (!response.ok) {
+       return { success: false, message: 'Server error' };
+    }
+
+    return await response.json();
+  } catch (err) {
+    console.error(err)
+    return { success: false, message: 'Network error' }
+  }
 }
 
 export type SessionSyncSnapshot = {
