@@ -1,19 +1,9 @@
+import { getItemColorFromDefinition } from '../data/itemDefinitions'
 import { GRID_COLS, GRID_ROWS } from '../constants'
 import type { Tile } from '../types'
 
-const ITEM_COLORS: Record<string, string> = {
-  wood: '#8B4513',
-  stone: '#808080',
-  brick: '#B22222',
-  resistor: '#e6a846',
-  capacitor: '#5b9bd5',
-  transistor: '#70ad47',
-  thyristor: '#c55a11',
-  diode: '#7030a0',
-}
-
 export function getItemColor(itemId: string): string {
-  return ITEM_COLORS[itemId] ?? '#ff00ff'
+  return getItemColorFromDefinition(itemId)
 }
 
 export function isValidCell(row: number, col: number): boolean {

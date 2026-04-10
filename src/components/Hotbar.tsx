@@ -1,4 +1,8 @@
 import { HOTBAR_SLOTS } from '../constants'
+import {
+  getItemDisplayName,
+  getItemImage,
+} from '../data/itemDefinitions'
 import { getItemColor } from '../systems/gridSystem'
 import { useGameStore } from '../store/gameState'
 
@@ -22,11 +26,20 @@ export function Hotbar() {
             <span className="key-hint">{i + 1}</span>
             {slot ? (
               <>
-                <span
-                  className="item-swatch"
-                  style={{ background: getItemColor(slot.itemId) }}
-                  title={slot.itemId}
-                />
+                {getItemImage(slot.itemId) ? (
+                  <img
+                    className="item-swatch item-swatch-img"
+                    src={getItemImage(slot.itemId)}
+                    alt=""
+                    title={getItemDisplayName(slot.itemId)}
+                  />
+                ) : (
+                  <span
+                    className="item-swatch"
+                    style={{ background: getItemColor(slot.itemId) }}
+                    title={getItemDisplayName(slot.itemId)}
+                  />
+                )}
                 <span className="slot-quantity">{slot.quantity}</span>
               </>
             ) : null}

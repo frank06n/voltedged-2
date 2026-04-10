@@ -198,6 +198,11 @@ body,
   border-radius: 2px;
 }
 
+.hotbar-slot .item-swatch-img {
+  object-fit: cover;
+  display: block;
+}
+
 .slot-quantity {
   position: absolute;
   bottom: 2px;

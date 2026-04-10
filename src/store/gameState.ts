@@ -36,7 +36,6 @@ function puzzlesToZones(
     correctAnswer: p.correctAnswer,
     rewardItems: p.rewardItems,
     solved: solvedIds.includes(p.id),
-    visible: p.visible ?? true,
   }))
 }
 

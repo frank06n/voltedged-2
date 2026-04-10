@@ -1,3 +1,4 @@
+import { SHOW_INTERACTION_ZONES } from '../constants'
 import {
   PLACEMENT_ZONES,
   SHOW_PLACEMENT_ZONES,
@@ -38,9 +39,8 @@ export function World({ hoverWorld, viewportWidth, viewportHeight }: WorldProps)
             }}
           />
         ))}
-      {interactionZones
-        .filter((z) => z.visible)
-        .map((zone) => (
+      {SHOW_INTERACTION_ZONES &&
+        interactionZones.map((zone) => (
           <div
             key={zone.id}
             className={`interaction-zone${zone.solved ? ' solved' : ''}`}

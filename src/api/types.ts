@@ -7,8 +7,6 @@ export type PuzzleConfig = {
   question: string
   correctAnswer: string
   rewardItems: { itemId: string; quantity: number }[]
-  /** Omitted in older saved sessions; defaults to true in the store mapper. */
-  visible?: boolean
 }
 
 export type InventorySlotConfig = {

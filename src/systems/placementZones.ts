@@ -1,3 +1,5 @@
+import { TILE_SIZE } from '../constants'
+
 export type PlacementZone = {
   id: string
   x: number
@@ -6,14 +8,31 @@ export type PlacementZone = {
   height: number
 }
 
+/** Pixel rect from top-left tile (col, row) spanning colsWide × rowsTall tiles — always grid-aligned. */
+function zone(
+  id: string,
+  col: number,
+  row: number,
+  colsWide: number,
+  rowsTall: number,
+): PlacementZone {
+  return {
+    id,
+    x: col * TILE_SIZE,
+    y: row * TILE_SIZE,
+    width: colsWide * TILE_SIZE,
+    height: rowsTall * TILE_SIZE,
+  }
+}
+
 export const SHOW_PLACEMENT_ZONES = true
 
 export const PLACEMENT_ZONES: PlacementZone[] = [
-  { id: 'pz-crossroads', x: 1344, y: 1344, width: 320, height: 320 },
-  { id: 'pz-north', x: 1344, y: 600, width: 320, height: 256 },
-  { id: 'pz-east', x: 2000, y: 1344, width: 320, height: 320 },
-  { id: 'pz-south', x: 1344, y: 2000, width: 320, height: 256 },
-  { id: 'pz-west', x: 600, y: 1344, width: 320, height: 320 },
+  zone('pz-crossroads', 42, 42, 10, 10),
+  zone('pz-north', 42, 19, 10, 8),
+  zone('pz-east', 63, 42, 10, 10),
+  zone('pz-south', 42, 62, 10, 8),
+  zone('pz-west', 19, 42, 10, 10),
 ]
 
 export function isInsidePlacementZone(
