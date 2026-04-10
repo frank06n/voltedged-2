@@ -4,7 +4,9 @@ import {
   GRID_COLS,
   GRID_ROWS,
   HOTBAR_SLOTS,
+  PLAYER_HEIGHT,
   PLAYER_SPEED,
+  PLAYER_WIDTH,
   WORLD_HEIGHT,
   WORLD_WIDTH,
 } from '../constants'
@@ -81,9 +83,13 @@ function applyPlacedItems(grid: Tile[][], placed: SessionConfig['placedItems']):
 
 export const useGameStore = create<GameState>((set) => ({
   player: {
-    x: WORLD_WIDTH / 2 - 16,
-    y: WORLD_HEIGHT / 2 - 16,
+    x: WORLD_WIDTH / 2 - PLAYER_WIDTH / 2,
+    y: WORLD_HEIGHT / 2 - PLAYER_HEIGHT / 2,
     speed: PLAYER_SPEED,
+    facingRight: false,
+    runFrame: 0,
+    runAnimMs: 0,
+    moving: false,
   },
   camera: { x: 0, y: 0 },
   grid: createEmptyGrid(),
@@ -127,6 +133,10 @@ export const useGameStore = create<GameState>((set) => ({
         x: config.playerStart.x,
         y: config.playerStart.y,
         speed: PLAYER_SPEED,
+        facingRight: false,
+        runFrame: 0,
+        runAnimMs: 0,
+        moving: false,
       },
       camera: { x: 0, y: 0 },
       grid,

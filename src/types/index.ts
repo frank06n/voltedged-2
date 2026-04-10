@@ -4,6 +4,14 @@ export type Player = {
   x: number
   y: number
   speed: number
+  /** Sprite faces left by default; true = flip for moving right. */
+  facingRight: boolean
+  /** Current run animation frame 0–3 (used when moving). */
+  runFrame: number
+  /** Accumulator (ms) for advancing run frames. */
+  runAnimMs: number
+  /** True while WASD movement this tick (idle sprite vs run cycle). */
+  moving: boolean
 }
 
 export type Camera = {

@@ -107,11 +107,23 @@ body,
 .player {
   position: absolute;
   width: 32px;
-  height: 32px;
-  background: #4a9eff;
-  border-radius: 4px;
+  height: 64px;
   z-index: 10;
   pointer-events: none;
+  overflow: visible;
+}
+
+.player-sprite {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  height: 64px;
+  width: auto;
+  display: block;
+  image-rendering: pixelated;
+  transform-origin: center bottom;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .grid-item {
