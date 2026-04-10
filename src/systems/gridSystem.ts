@@ -1,6 +1,11 @@
-import { getItemColorFromDefinition } from '../data/itemDefinitions'
+import {
+  getItemColorFromDefinition,
+  initialVariantForItem,
+} from '../data/itemDefinitions'
 import { GRID_COLS, GRID_ROWS } from '../constants'
 import type { Tile } from '../types'
+
+const EMPTY_TILE = (): Tile => ({ itemId: null, variant: '' })
 
 export function getItemColor(itemId: string): string {
   return getItemColorFromDefinition(itemId)
@@ -19,8 +24,9 @@ export function placeItem(
   if (!isValidCell(row, col)) return grid
   const cell = grid[row][col]
   if (cell.itemId !== null) return grid
+  const variant = initialVariantForItem(itemId)
   const newGrid = grid.map((r, ri) =>
-    ri === row ? r.map((c, ci) => (ci === col ? { itemId } : c)) : r,
+    ri === row ? r.map((c, ci) => (ci === col ? { itemId, variant } : c)) : r,
   )
   return newGrid
 }
@@ -28,7 +34,7 @@ export function placeItem(
 export function removeItem(grid: Tile[][], row: number, col: number): Tile[][] {
   if (!isValidCell(row, col)) return grid
   const newGrid = grid.map((r, ri) =>
-    ri === row ? r.map((c, ci) => (ci === col ? { itemId: null } : c)) : r,
+    ri === row ? r.map((c, ci) => (ci === col ? EMPTY_TILE() : c)) : r,
   )
   return newGrid
 }

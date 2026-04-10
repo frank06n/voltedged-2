@@ -90,3 +90,9 @@ export function getItemVariantOptions(itemId: string): string[] {
   if (!raw) return []
   return raw.split(',').map((s) => s.trim()).filter(Boolean)
 }
+
+/** First variant label when placing an item, or empty string if none. */
+export function initialVariantForItem(itemId: string): string {
+  const opts = getItemVariantOptions(itemId)
+  return opts[0] ?? ''
+}

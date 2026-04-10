@@ -127,6 +127,19 @@ body,
   z-index: 8;
 }
 
+.item-tooltip {
+  position: absolute;
+  z-index: 15;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
 .placement-zone {
   position: absolute;
   background: rgba(100, 180, 255, 0.08);

@@ -151,7 +151,7 @@ export function buildSessionSyncSnapshot(
     sessionId: string | null
     seed: string | null
     hotbar: { slots: { itemId: string; quantity: number }[] | (null | { itemId: string; quantity: number })[] }
-    grid: { itemId: string | null }[][]
+    grid: { itemId: string | null; variant: string }[][]
     solvedPuzzleIds: string[]
   },
 ): SessionSyncSnapshot {
@@ -164,7 +164,15 @@ export function buildSessionSyncSnapshot(
   for (let r = 0; r < state.grid.length; r++) {
     for (let c = 0; c < state.grid[r].length; c++) {
       const id = state.grid[r][c].itemId
-      if (id) placedItems.push({ row: r, col: c, itemId: id })
+      if (id) {
+        const variant = state.grid[r][c].variant
+        placedItems.push({
+          row: r,
+          col: c,
+          itemId: id,
+          ...(variant ? { variant } : {}),
+        })
+      }
     }
   }
 

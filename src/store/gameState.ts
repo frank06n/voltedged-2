@@ -9,6 +9,10 @@ import {
   WORLD_WIDTH,
 } from '../constants'
 import {
+  getItemVariantOptions,
+  initialVariantForItem,
+} from '../data/itemDefinitions'
+import {
   addItems,
   consumeFromSlot,
   inventoryConfigToSlots,
@@ -18,7 +22,7 @@ import type { GameState, InteractionZone, Tile } from '../types'
 
 function createEmptyGrid(): Tile[][] {
   return Array.from({ length: GRID_ROWS }, () =>
-    Array.from({ length: GRID_COLS }, () => ({ itemId: null })),
+    Array.from({ length: GRID_COLS }, () => ({ itemId: null, variant: '' })),
   )
 }
 
@@ -41,16 +45,21 @@ function puzzlesToZones(
 
 function applyPlacedItems(grid: Tile[][], placed: SessionConfig['placedItems']): Tile[][] {
   let next = grid
-  for (const { row, col, itemId } of placed) {
+  for (const p of placed) {
+    const { row, col, itemId } = p
     if (
       row >= 0 &&
       row < GRID_ROWS &&
       col >= 0 &&
       col < GRID_COLS
     ) {
+      const variant =
+        p.variant !== undefined && p.variant !== ''
+          ? p.variant
+          : initialVariantForItem(itemId)
       next = next.map((r, ri) =>
         ri === row
-          ? r.map((c, ci) => (ci === col ? { itemId } : c))
+          ? r.map((c, ci) => (ci === col ? { itemId, variant } : c))
           : r,
       )
     }
@@ -75,6 +84,7 @@ export const useGameStore = create<GameState>((set) => ({
   sessionId: null,
   seed: null,
   solvedPuzzleIds: [],
+  variantJustCycledCell: null,
 
   setPlayer: (player) => set({ player }),
   setCamera: (camera) => set({ camera }),
@@ -117,6 +127,7 @@ export const useGameStore = create<GameState>((set) => ({
       sessionId: config.sessionId,
       seed: config.seed,
       solvedPuzzleIds: [...config.solvedPuzzleIds],
+      variantJustCycledCell: null,
     })
   },
 
@@ -166,4 +177,44 @@ export const useGameStore = create<GameState>((set) => ({
         slots: addItems(state.hotbar.slots, items),
       },
     })),
+
+  cycleVariant: (row, col) => {
+    let cycled = false
+    set((state) => {
+      if (
+        row < 0 ||
+        row >= GRID_ROWS ||
+        col < 0 ||
+        col >= GRID_COLS
+      ) {
+        return state
+      }
+      const cell = state.grid[row][col]
+      const itemId = cell.itemId
+      if (!itemId) return state
+
+      const opts = getItemVariantOptions(itemId)
+      if (opts.length === 0) return state
+
+      let idx = opts.indexOf(cell.variant)
+      if (idx === -1) idx = 0
+      const nextVariant = opts[(idx + 1) % opts.length]
+
+      cycled = true
+      const newGrid = state.grid.map((r, ri) =>
+        ri === row
+          ? r.map((c, ci) =>
+              ci === col ? { itemId, variant: nextVariant } : c,
+            )
+          : r,
+      )
+      return {
+        grid: newGrid,
+        variantJustCycledCell: { row, col },
+      }
+    })
+    return cycled
+  },
+
+  clearVariantJustCycled: () => set({ variantJustCycledCell: null }),
 }))

@@ -13,6 +13,7 @@ export type Camera = {
 
 export type Tile = {
   itemId: string | null
+  variant: string
 }
 
 export type InventorySlot = {
@@ -47,6 +48,7 @@ export type GameState = {
   sessionId: string | null
   seed: string | null
   solvedPuzzleIds: string[]
+  variantJustCycledCell: { row: number; col: number } | null
 
   setPlayer: (player: Player) => void
   setCamera: (camera: Camera) => void
@@ -60,4 +62,6 @@ export type GameState = {
   returnItem: (itemId: string) => boolean
   markZoneSolved: (zoneId: string) => void
   addRewardItems: (items: { itemId: string; quantity: number }[]) => void
+  cycleVariant: (row: number, col: number) => boolean
+  clearVariantJustCycled: () => void
 }

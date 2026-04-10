@@ -18,6 +18,7 @@ export type PlacedItem = {
   row: number
   col: number
   itemId: string
+  variant?: string
 }
 
 export type SessionConfig = {

@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { buildSessionSyncSnapshot, syncSessionToApi } from '../api/sessionApi'
+import { getItemVariantOptions } from '../data/itemDefinitions'
 import { useGameLoop } from '../hooks/useGameLoop'
 import { useKeyboard } from '../hooks/useKeyboard'
 import { useMouse } from '../hooks/useMouse'
 import { updateCamera } from '../systems/cameraSystem'
 import { findActiveZone } from '../systems/interactionSystem'
 import { canPlaceAt, canRemoveAt } from '../systems/placementValidation'
+import { isInsidePlacementZone } from '../systems/placementZones'
 import {
   isValidCell,
   placeItem,
@@ -30,6 +32,10 @@ export function Game() {
     height: typeof window !== 'undefined' ? window.innerHeight : 600,
   })
   const [hoverWorld, setHoverWorld] = useState<{
+    x: number
+    y: number
+  } | null>(null)
+  const hoverWorldRef = useRef<{
     x: number
     y: number
   } | null>(null)
@@ -83,6 +89,27 @@ export function Game() {
         return
       }
       if (k === 'e') {
+        const hw = hoverWorldRef.current
+        if (hw) {
+          const { gridCol, gridRow } = worldToGrid(hw.x, hw.y)
+          if (
+            isInsidePlacementZone(hw.x, hw.y) &&
+            isValidCell(gridRow, gridCol)
+          ) {
+            const cell = state.grid[gridRow][gridCol]
+            const itemId = cell.itemId
+            if (
+              itemId &&
+              getItemVariantOptions(itemId).length > 0
+            ) {
+              if (state.cycleVariant(gridRow, gridCol)) {
+                e.preventDefault()
+                fireSync()
+                return
+              }
+            }
+          }
+        }
         const zone = findActiveZone(state.player, state.interactionZones)
         if (zone) {
           state.setActiveModal(zone)
@@ -92,7 +119,7 @@ export function Game() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [worldToGrid])
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const el = containerRef.current
@@ -103,7 +130,9 @@ export function Game() {
     mousePos.current = { x: screenX, y: screenY }
     const { camera } = useGameStore.getState()
     const { worldX, worldY } = screenToWorld(screenX, screenY, camera)
-    setHoverWorld({ x: worldX, y: worldY })
+    const next = { x: worldX, y: worldY }
+    hoverWorldRef.current = next
+    setHoverWorld(next)
   }
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -180,7 +209,10 @@ export function Game() {
       ref={containerRef}
       className="game-container"
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => setHoverWorld(null)}
+      onMouseLeave={() => {
+        hoverWorldRef.current = null
+        setHoverWorld(null)
+      }}
       onMouseDown={handleMouseDown}
       onContextMenu={(ev) => ev.preventDefault()}
       role="application"
