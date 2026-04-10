@@ -5,7 +5,7 @@ export type PuzzleConfig = {
   width: number
   height: number
   question: string
-  correctAnswer: string
+  correctAnswer?: string
   rewardItems: { itemId: string; quantity: number }[]
 }
 
@@ -24,19 +24,22 @@ export type PlacedItem = {
 
 export type SessionConfig = {
   sessionId: string
-  seed: string
+  teamName: string
+  teamLeadName: string
+  shift: number
   worldWidth: number
   worldHeight: number
   playerStart: { x: number; y: number }
-  puzzles: PuzzleConfig[]
+  assignedPuzzleIds: string[]
   inventory: InventorySlotConfig[]
   placedItems: PlacedItem[]
   solvedPuzzleIds: string[]
+  circuitCompletedAt: string | null
 }
 
 export type SessionUpdate = {
   sessionId: string
-  seed: string
+  teamName: string
   inventory?: InventorySlotConfig[]
   placedItems?: PlacedItem[]
   solvedPuzzleIds?: string[]
