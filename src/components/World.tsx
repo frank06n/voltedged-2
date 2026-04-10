@@ -1,4 +1,8 @@
-import { SHOW_INTERACTION_ZONES } from '../constants'
+import {
+  SHOW_INTERACTION_ZONES,
+  WORLD_HEIGHT,
+  WORLD_WIDTH,
+} from '../constants'
 import {
   PLACEMENT_ZONES,
   SHOW_PLACEMENT_ZONES,
@@ -22,6 +26,8 @@ export function World({ hoverWorld, viewportWidth, viewportHeight }: WorldProps)
     <div
       className="world"
       style={{
+        width: WORLD_WIDTH,
+        height: WORLD_HEIGHT,
         transform: `translate(${-camera.x}px, ${-camera.y}px)`,
       }}
     >

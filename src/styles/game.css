@@ -88,15 +88,17 @@ body,
   z-index: 0;
 }
 
-.world-bg-layer > div {
+.world-bg-layer .world-map-bg {
   position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
   pointer-events: none;
+  image-rendering: pixelated;
 }
 
 .world {
   position: absolute;
-  width: 3000px;
-  height: 3000px;
 }
 
 .player {

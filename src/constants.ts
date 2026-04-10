@@ -1,6 +1,7 @@
 export const TILE_SIZE = 32
-export const WORLD_WIDTH = 3000
-export const WORLD_HEIGHT = 3000
+/** Matches `public/map.png` (3072×3072); divisible by TILE_SIZE → 96×96 tiles. */
+export const WORLD_WIDTH = 3072
+export const WORLD_HEIGHT = 3072
 export const PLAYER_SPEED = 3
 export const PLAYER_SIZE = 32
 export const EDGE_THRESHOLD = 200
