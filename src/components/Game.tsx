@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { buildSessionSyncSnapshot, syncSessionToApi } from '../api/sessionApi'
 import { useGameLoop } from '../hooks/useGameLoop'
 import { useKeyboard } from '../hooks/useKeyboard'
 import { useMouse } from '../hooks/useMouse'
+import { canPlaceItem } from '../systems/inventorySystem'
 import { updateCamera } from '../systems/cameraSystem'
 import { findActiveZone } from '../systems/interactionSystem'
 import {
@@ -14,6 +16,10 @@ import { useGameStore } from '../store/gameState'
 import { Hotbar } from './Hotbar'
 import { InteractionModal } from './InteractionModal'
 import { World } from './World'
+
+function fireSync() {
+  void syncSessionToApi(buildSessionSyncSnapshot(useGameStore.getState()))
+}
 
 export function Game() {
   const keysRef = useKeyboard()
@@ -109,7 +115,7 @@ export function Game() {
     const rect = el.getBoundingClientRect()
     const screenX = e.clientX - rect.left
     const screenY = e.clientY - rect.top
-    const { camera, grid, hotbar, setGrid } = state
+    const { camera, grid, hotbar, setGrid, returnItem, consumeItem } = state
     const { worldX, worldY } = screenToWorld(screenX, screenY, camera)
     const { gridCol, gridRow } = worldToGrid(worldX, worldY)
 
@@ -120,7 +126,10 @@ export function Game() {
     if (e.button === 2) {
       e.preventDefault()
       if (cell.itemId) {
+        const itemId = cell.itemId
         setGrid(removeItem(grid, gridRow, gridCol))
+        returnItem(itemId)
+        fireSync()
       }
       return
     }
@@ -128,14 +137,25 @@ export function Game() {
     if (e.button !== 0) return
 
     if (cell.itemId) {
+      const itemId = cell.itemId
       setGrid(removeItem(grid, gridRow, gridCol))
+      returnItem(itemId)
+      fireSync()
       return
     }
 
-    const itemId = hotbar.slots[hotbar.activeIndex]
-    if (itemId) {
-      setGrid(placeItem(grid, gridRow, gridCol, itemId))
-    }
+    const idx = hotbar.activeIndex
+    if (!canPlaceItem(hotbar.slots, idx)) return
+
+    const slot = hotbar.slots[idx]
+    if (!slot) return
+
+    const placed = placeItem(grid, gridRow, gridCol, slot.itemId)
+    if (placed === grid) return
+
+    if (!consumeItem(idx)) return
+    setGrid(placed)
+    fireSync()
   }
 
   return (

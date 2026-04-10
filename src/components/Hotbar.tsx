@@ -9,7 +9,7 @@ export function Hotbar() {
   return (
     <div className="hotbar" role="toolbar" aria-label="Item hotbar">
       {Array.from({ length: HOTBAR_SLOTS }, (_, i) => {
-        const itemId = hotbar.slots[i]
+        const slot = hotbar.slots[i]
         const active = i === hotbar.activeIndex
         return (
           <button
@@ -20,12 +20,15 @@ export function Hotbar() {
             aria-pressed={active}
           >
             <span className="key-hint">{i + 1}</span>
-            {itemId ? (
-              <span
-                className="item-swatch"
-                style={{ background: getItemColor(itemId) }}
-                title={itemId}
-              />
+            {slot ? (
+              <>
+                <span
+                  className="item-swatch"
+                  style={{ background: getItemColor(slot.itemId) }}
+                  title={slot.itemId}
+                />
+                <span className="slot-quantity">{slot.quantity}</span>
+              </>
             ) : null}
           </button>
         )

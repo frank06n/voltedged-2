@@ -1,3 +1,5 @@
+import type { SessionConfig } from '../api/types'
+
 export type Player = {
   x: number
   y: number
@@ -13,8 +15,13 @@ export type Tile = {
   itemId: string | null
 }
 
+export type InventorySlot = {
+  itemId: string
+  quantity: number
+}
+
 export type Hotbar = {
-  slots: (string | null)[]
+  slots: (InventorySlot | null)[]
   activeIndex: number
 }
 
@@ -25,6 +32,9 @@ export type InteractionZone = {
   width: number
   height: number
   question: string
+  correctAnswer: string
+  rewardItems: { itemId: string; quantity: number }[]
+  solved: boolean
 }
 
 export type GameState = {
@@ -34,6 +44,9 @@ export type GameState = {
   hotbar: Hotbar
   interactionZones: InteractionZone[]
   activeModal: InteractionZone | null
+  sessionId: string | null
+  seed: string | null
+  solvedPuzzleIds: string[]
 
   setPlayer: (player: Player) => void
   setCamera: (camera: Camera) => void
@@ -41,4 +54,10 @@ export type GameState = {
   setGrid: (grid: Tile[][]) => void
   setHotbarActive: (index: number) => void
   setActiveModal: (zone: InteractionZone | null) => void
+
+  loadSession: (config: SessionConfig) => void
+  consumeItem: (slotIndex: number) => boolean
+  returnItem: (itemId: string) => boolean
+  markZoneSolved: (zoneId: string) => void
+  addRewardItems: (items: { itemId: string; quantity: number }[]) => void
 }

@@ -1,21 +1,86 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { buildSessionSyncSnapshot, syncSessionToApi } from '../api/sessionApi'
 import { useGameStore } from '../store/gameState'
+
+type Feedback = 'idle' | 'correct' | 'wrong'
 
 export function InteractionModal() {
   const activeModal = useGameStore((s) => s.activeModal)
   const setActiveModal = useGameStore((s) => s.setActiveModal)
+  const markZoneSolved = useGameStore((s) => s.markZoneSolved)
+  const addRewardItems = useGameStore((s) => s.addRewardItems)
   const [answer, setAnswer] = useState('')
+  const [feedback, setFeedback] = useState<Feedback>('idle')
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    setAnswer('')
+    setFeedback('idle')
+  }, [activeModal?.id])
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+    }
+  }, [])
 
   if (!activeModal) return null
 
   const handleClose = () => {
     setActiveModal(null)
     setAnswer('')
+    setFeedback('idle')
+  }
+
+  const fireSync = () => {
+    void syncSessionToApi(buildSessionSyncSnapshot(useGameStore.getState()))
   }
 
   const handleSubmit = () => {
-    // Placeholder for Phase 7 LLM integration
-    handleClose()
+    if (activeModal.solved) {
+      handleClose()
+      return
+    }
+
+    const guess = answer.trim().toLowerCase()
+    const expected = activeModal.correctAnswer.trim().toLowerCase()
+    if (guess === expected) {
+      setFeedback('correct')
+      markZoneSolved(activeModal.id)
+      addRewardItems(activeModal.rewardItems)
+      fireSync()
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = window.setTimeout(() => {
+        closeTimerRef.current = null
+        handleClose()
+      }, 500)
+    } else {
+      setFeedback('wrong')
+    }
+  }
+
+  if (activeModal.solved) {
+    return (
+      <div
+        className="modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="puzzle-title"
+      >
+        <div className="modal-content">
+          <h2 id="puzzle-title">{activeModal.question}</h2>
+          <p className="modal-solved-text">
+            Completed. Answer:{' '}
+            <strong>{activeModal.correctAnswer}</strong>
+          </p>
+          <div className="modal-actions">
+            <button type="button" className="secondary" onClick={handleClose}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -30,22 +95,28 @@ export function InteractionModal() {
         <input
           type="text"
           value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
+          onChange={(e) => {
+            setAnswer(e.target.value)
+            setFeedback('idle')
+          }}
           placeholder="Your answer"
           autoFocus
           onKeyDown={(e) => {
             if (e.key === 'Escape') handleClose()
+            if (e.key === 'Enter') handleSubmit()
           }}
         />
+        {feedback === 'correct' ? (
+          <p className="modal-feedback modal-feedback-correct">Correct!</p>
+        ) : null}
+        {feedback === 'wrong' ? (
+          <p className="modal-feedback modal-feedback-wrong">Try again.</p>
+        ) : null}
         <div className="modal-actions">
           <button type="button" onClick={handleSubmit}>
             Submit
           </button>
-          <button
-            type="button"
-            className="secondary"
-            onClick={handleClose}
-          >
+          <button type="button" className="secondary" onClick={handleClose}>
             Close
           </button>
         </div>

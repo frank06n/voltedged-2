@@ -1,6 +1,7 @@
 import { useGameStore } from '../store/gameState'
 import { Grid } from './Grid'
 import { Player } from './Player'
+import { WorldBackground } from './WorldBackground'
 
 type WorldProps = {
   hoverWorld: { x: number; y: number } | null
@@ -19,10 +20,11 @@ export function World({ hoverWorld, viewportWidth, viewportHeight }: WorldProps)
         transform: `translate(${-camera.x}px, ${-camera.y}px)`,
       }}
     >
+      <WorldBackground />
       {interactionZones.map((zone) => (
         <div
           key={zone.id}
-          className="interaction-zone"
+          className={`interaction-zone${zone.solved ? ' solved' : ''}`}
           style={{
             left: zone.x,
             top: zone.y,
