@@ -1,4 +1,4 @@
-import type { SessionConfig } from '../api/types'
+import type { InventorySlotConfig, SessionConfig } from '../api/types'
 
 export type Player = {
   x: number
@@ -33,8 +33,8 @@ export type InteractionZone = {
   y: number
   width: number
   height: number
+  /** Question link from session payload (backend). */
   question: string
-  correctAnswer?: string
   rewardItems: { itemId: string; quantity: number }[]
   solved: boolean
 }
@@ -62,6 +62,8 @@ export type GameState = {
   consumeItem: (slotIndex: number) => boolean
   returnItem: (itemId: string) => boolean
   markZoneSolved: (zoneId: string) => void
+  /** Replace hotbar from API inventory (e.g. after puzzle verify). */
+  applyServerInventory: (inventory: InventorySlotConfig[]) => void
   addRewardItems: (items: { itemId: string; quantity: number }[]) => void
   cycleVariant: (row: number, col: number) => boolean
   cycleOrientation: (row: number, col: number) => boolean

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { SessionConfig } from '../api/types'
+import type { AssignedPuzzle, SessionConfig } from '../api/types'
 import {
   GRID_COLS,
   GRID_ROWS,
@@ -32,22 +32,22 @@ function createEmptyGrid(): Tile[][] {
 }
 
 function puzzlesToZones(
-  assignedPuzzleIds: string[],
+  assignedPuzzles: AssignedPuzzle[],
   solvedIds: string[],
 ): InteractionZone[] {
-  return assignedPuzzleIds
-    .filter((id) => PUZZLE_LOCATIONS[id])
-    .map((id) => {
-      const loc = PUZZLE_LOCATIONS[id]
+  return assignedPuzzles
+    .filter((p) => PUZZLE_LOCATIONS[p.id])
+    .map((p) => {
+      const loc = PUZZLE_LOCATIONS[p.id]
       return {
-        id,
+        id: p.id,
         x: loc.x,
         y: loc.y,
         width: loc.width,
         height: loc.height,
-        question: '', // fetched on-demand from backend
+        question: p.question,
         rewardItems: loc.rewardItems,
-        solved: solvedIds.includes(id),
+        solved: solvedIds.includes(p.id),
       }
     })
 }
@@ -120,7 +120,11 @@ export const useGameStore = create<GameState>((set) => ({
   loadSession: (config) => {
     const empty = createEmptyGrid()
     const grid = applyPlacedItems(empty, config.placedItems)
-    const zones = puzzlesToZones(config.assignedPuzzleIds, config.solvedPuzzleIds)
+    const assignedPuzzles =
+      config.assignedPuzzles && config.assignedPuzzles.length > 0
+        ? config.assignedPuzzles
+        : config.assignedPuzzleIds.map((id) => ({ id, question: '' }))
+    const zones = puzzlesToZones(assignedPuzzles, config.solvedPuzzleIds)
 
     set({
       player: {
@@ -180,6 +184,14 @@ export const useGameStore = create<GameState>((set) => ({
       interactionZones: state.interactionZones.map((z) =>
         z.id === zoneId ? { ...z, solved: true } : z,
       ),
+    })),
+
+  applyServerInventory: (inventory) =>
+    set((state) => ({
+      hotbar: {
+        ...state.hotbar,
+        slots: inventoryConfigToSlots(inventory),
+      },
     })),
 
   addRewardItems: (items) =>

@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { buildSessionSyncSnapshot, completeCircuit, syncSessionToApi } from '../api/sessionApi'
+import {
+  API_BASE_URL,
+  buildSessionSyncSnapshot,
+  completeCircuit,
+  syncSessionToApi,
+} from '../api/sessionApi'
 import { getItemVariantOptions } from '../data/itemDefinitions'
 import { useGameLoop } from '../hooks/useGameLoop'
 import { useKeyboard } from '../hooks/useKeyboard'
@@ -56,7 +61,6 @@ export function Game({ onLogout }: { onLogout: () => void }) {
 
   const handleLogout = async () => {
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
       await fetch(`${API_BASE_URL}/api/session/logout`, { method: 'POST' });
     } catch {
       // ignore network errors
@@ -79,6 +83,10 @@ export function Game({ onLogout }: { onLogout: () => void }) {
     setSyncCooldown(true)
     setTimeout(() => setSyncCooldown(false), SYNC_COOLDOWN_MS)
     setTimeout(() => setSyncMsg(''), 3000)
+  }
+
+  const fireSync = () => {
+    void syncSessionToApi(buildSessionSyncSnapshot(useGameStore.getState()))
   }
 
   const handleCircuitComplete = async () => {

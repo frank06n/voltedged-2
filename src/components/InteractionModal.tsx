@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { buildSessionSyncSnapshot, getPuzzleQuestion, syncSessionToApi } from '../api/sessionApi'
+import {
+  buildSessionSyncSnapshot,
+  syncSessionToApi,
+  verifyPuzzle,
+} from '../api/sessionApi'
 import { useGameStore } from '../store/gameState'
 
 type Feedback = 'idle' | 'correct' | 'wrong'
@@ -8,33 +12,14 @@ export function InteractionModal() {
   const activeModal = useGameStore((s) => s.activeModal)
   const setActiveModal = useGameStore((s) => s.setActiveModal)
   const markZoneSolved = useGameStore((s) => s.markZoneSolved)
-  const addRewardItems = useGameStore((s) => s.addRewardItems)
+  const applyServerInventory = useGameStore((s) => s.applyServerInventory)
   const [answer, setAnswer] = useState('')
   const [feedback, setFeedback] = useState<Feedback>('idle')
-  const [question, setQuestion] = useState<string | null>(null)
-  const [loadingQuestion, setLoadingQuestion] = useState(false)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Fetch the question from the backend when the modal opens
   useEffect(() => {
     setAnswer('')
     setFeedback('idle')
-    setQuestion(null)
-
-    if (!activeModal) return
-
-    const sessionId = useGameStore.getState().sessionId
-    if (!sessionId) return
-
-    setLoadingQuestion(true)
-    getPuzzleQuestion(sessionId, activeModal.id).then((res) => {
-      if (res.success && res.question) {
-        setQuestion(res.question)
-      } else {
-        setQuestion('Failed to load question.')
-      }
-      setLoadingQuestion(false)
-    })
   }, [activeModal?.id])
 
   useEffect(() => {
@@ -45,11 +30,12 @@ export function InteractionModal() {
 
   if (!activeModal) return null
 
+  const questionLink = activeModal.question.trim()
+
   const handleClose = () => {
     setActiveModal(null)
     setAnswer('')
     setFeedback('idle')
-    setQuestion(null)
   }
 
   const fireSync = () => {
@@ -65,19 +51,15 @@ export function InteractionModal() {
     const guess = answer.trim()
     const sessionId = useGameStore.getState().sessionId
     if (!sessionId) return
-    
-    const { verifyPuzzle } = await import('../api/sessionApi')
+
     const res = await verifyPuzzle(sessionId, activeModal.id, guess)
 
     if (res.success && res.inventory && res.solvedPuzzleIds) {
       setFeedback('correct')
-      
+
       markZoneSolved(activeModal.id)
-      
-      if (activeModal.rewardItems) {
-         addRewardItems(activeModal.rewardItems)
-      }
-      
+      applyServerInventory(res.inventory)
+
       fireSync()
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
       closeTimerRef.current = window.setTimeout(() => {
@@ -98,10 +80,15 @@ export function InteractionModal() {
         aria-labelledby="puzzle-title"
       >
         <div className="modal-content">
-          <h2 id="puzzle-title">{question ?? 'Puzzle'}</h2>
-          <p className="modal-solved-text">
-            Completed.
-          </p>
+          <h2 id="puzzle-title">Puzzle</h2>
+          {questionLink ? (
+            <p className="modal-question-link">
+              <a href={questionLink} target="_blank" rel="noreferrer">
+                Question link
+              </a>
+            </p>
+          ) : null}
+          <p className="modal-solved-text">Completed.</p>
           <div className="modal-actions">
             <button type="button" className="secondary" onClick={handleClose}>
               Close
@@ -120,10 +107,15 @@ export function InteractionModal() {
       aria-labelledby="puzzle-title"
     >
       <div className="modal-content">
-        {loadingQuestion ? (
-          <h2 id="puzzle-title">Loading question…</h2>
+        <h2 id="puzzle-title">Puzzle</h2>
+        {questionLink ? (
+          <p className="modal-question-link">
+            <a href={questionLink} target="_blank" rel="noreferrer">
+              Open question document
+            </a>
+          </p>
         ) : (
-          <h2 id="puzzle-title">{question ?? 'Unknown question'}</h2>
+          <p className="modal-question-link">No question link for this puzzle.</p>
         )}
         <input
           type="text"
@@ -134,7 +126,6 @@ export function InteractionModal() {
           }}
           placeholder="Your answer"
           autoFocus
-          disabled={loadingQuestion}
           onKeyDown={(e) => {
             if (e.key === 'Escape') handleClose()
             if (e.key === 'Enter') handleSubmit()
@@ -147,7 +138,7 @@ export function InteractionModal() {
           <p className="modal-feedback modal-feedback-wrong">Try again.</p>
         ) : null}
         <div className="modal-actions">
-          <button type="button" onClick={handleSubmit} disabled={loadingQuestion}>
+          <button type="button" onClick={handleSubmit}>
             Submit
           </button>
           <button type="button" className="secondary" onClick={handleClose}>
