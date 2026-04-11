@@ -8,7 +8,21 @@ export type PlacementZone = {
   height: number
 }
 
-/** Pixel rect from top-left tile (col, row) spanning colsWide × rowsTall tiles — always grid-aligned. */
+/** Pixel rect from top-left tile (col, row) spanning colsWide × rowsTall tiles — same math as placement zones. */
+export function gridRectTiles(
+  col: number,
+  row: number,
+  colsWide: number,
+  rowsTall: number,
+): Pick<PlacementZone, 'x' | 'y' | 'width' | 'height'> {
+  return {
+    x: col * TILE_SIZE,
+    y: row * TILE_SIZE,
+    width: colsWide * TILE_SIZE,
+    height: rowsTall * TILE_SIZE,
+  }
+}
+
 function zone(
   id: string,
   col: number,
@@ -16,13 +30,7 @@ function zone(
   colsWide: number,
   rowsTall: number,
 ): PlacementZone {
-  return {
-    id,
-    x: col * TILE_SIZE,
-    y: row * TILE_SIZE,
-    width: colsWide * TILE_SIZE,
-    height: rowsTall * TILE_SIZE,
-  }
+  return { id, ...gridRectTiles(col, row, colsWide, rowsTall) }
 }
 
 export const SHOW_PLACEMENT_ZONES = false

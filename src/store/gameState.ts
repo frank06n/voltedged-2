@@ -48,7 +48,6 @@ function puzzlesToZones(
         width: loc.width,
         height: loc.height,
         question: '',
-        rewardItems: loc.rewardItems ?? [],
         solved: solvedIds.includes(id),
       }
     })
