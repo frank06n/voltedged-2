@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   API_BASE_URL,
   buildSessionSyncSnapshot,
-  completeCircuit,
+  checkCircuit,
   syncSessionToApi,
 } from '../api/sessionApi'
 import { playPickSfx, playPutSfx } from '../audio/playSfx'
@@ -64,6 +64,7 @@ export function Game({ onLogout }: { onLogout: () => void }) {
   const [showCongrats, setShowCongrats] = useState(false)
   const [congratsTime, setCongratsTime] = useState('')
   const [gameOver, setGameOver] = useState(false)
+  const [showJudgeHint, setShowJudgeHint] = useState(false)
 
   // Sync button state
   const [syncing, setSyncing] = useState(false)
@@ -116,19 +117,27 @@ export function Game({ onLogout }: { onLogout: () => void }) {
     const sessionId = useGameStore.getState().sessionId
     if (!sessionId) return
 
-    // First sync the circuit state
+    setCircuitMsg('')
     await syncSessionToApi(buildSessionSyncSnapshot(useGameStore.getState()))
 
-    const res = await completeCircuit(sessionId)
-    if (res.success) {
-      setCircuitDone(true)
-      setCongratsTime(new Date(res.completedAt!).toLocaleTimeString())
-      setShowCongrats(true)
-    } else {
-      setCircuitMsg(res.message || 'Failed')
-      // Start cooldown on failure
+    const res = await checkCircuit(sessionId)
+    if (!res.success) {
+      setCircuitMsg(res.message || 'Could not check circuit status')
       setCircuitCooldown(true)
       setTimeout(() => setCircuitCooldown(false), CIRCUIT_COOLDOWN_MS)
+      return
+    }
+
+    if (res.circuitCorrect) {
+      useGameStore.getState().setCircuitApproved(true)
+      const t = res.completedAt
+        ? new Date(res.completedAt).toLocaleTimeString()
+        : new Date().toLocaleTimeString()
+      setCongratsTime(t)
+      setCircuitDone(true)
+      setShowCongrats(true)
+    } else {
+      setShowJudgeHint(true)
     }
   }
 
@@ -162,6 +171,16 @@ export function Game({ onLogout }: { onLogout: () => void }) {
   }, [keysRef])
 
   useGameLoop(tick)
+
+  const sessionResumeRef = useRef(false)
+  useEffect(() => {
+    if (sessionResumeRef.current) return
+    sessionResumeRef.current = true
+    if (useGameStore.getState().circuitApproved) {
+      setCircuitDone(true)
+      setGameOver(true)
+    }
+  }, [])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -390,6 +409,34 @@ export function Game({ onLogout }: { onLogout: () => void }) {
       {/* Status messages */}
       {(syncMsg || circuitMsg) && (
         <div className="game-status-msg">{syncMsg || circuitMsg}</div>
+      )}
+
+      {/* Judge: manual circuit verification */}
+      {showJudgeHint && (
+        <div
+          className="congrats-overlay"
+          onClick={() => setShowJudgeHint(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="judge-hint-title"
+        >
+          <div className="congrats-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="congrats-title" id="judge-hint-title">
+              See a judge
+            </div>
+            <div className="congrats-subtitle">
+              Please go to a judge with your team so they can manually test your circuit. When they
+              approve it in the admin panel, press <strong>Test Circuit</strong> again to finish.
+            </div>
+            <button
+              type="button"
+              className="congrats-dismiss"
+              onClick={() => setShowJudgeHint(false)}
+            >
+              OK
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Congrats popup on circuit completion */}

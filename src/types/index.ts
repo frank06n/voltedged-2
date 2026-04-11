@@ -65,6 +65,8 @@ export type GameState = {
   componentsEarned: number
   /** Toast: components just unlocked (cleared after display) */
   lastUnlockedComponents: { itemId: string; quantity: number }[]
+  /** Server: judge marked circuit correct (from session / check). */
+  circuitApproved: boolean
 
   setPlayer: (player: Player) => void
   setCamera: (camera: Camera) => void
@@ -82,6 +84,7 @@ export type GameState = {
   addRewardItems: (items: { itemId: string; quantity: number }[]) => void
   updateProgress: (solvedCount: number, totalPuzzles: number, totalComponents: number, componentsEarned: number) => void
   setLastUnlockedComponents: (items: { itemId: string; quantity: number }[]) => void
+  setCircuitApproved: (approved: boolean) => void
   cycleVariant: (row: number, col: number) => boolean
   cycleOrientation: (row: number, col: number) => boolean
   clearVariantJustCycled: () => void

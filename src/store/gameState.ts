@@ -108,6 +108,7 @@ export const useGameStore = create<GameState>((set) => ({
   totalComponents: 0,
   componentsEarned: 0,
   lastUnlockedComponents: [],
+  circuitApproved: false,
 
   setPlayer: (player) => set({ player }),
   setCamera: (camera) => set({ camera }),
@@ -161,8 +162,11 @@ export const useGameStore = create<GameState>((set) => ({
       totalComponents: config.totalComponents ?? 0,
       componentsEarned: config.componentsEarned ?? 0,
       lastUnlockedComponents: [],
+      circuitApproved: config.circuitCorrect ?? false,
     })
   },
+
+  setCircuitApproved: (approved) => set({ circuitApproved: approved }),
 
   consumeItem: (slotIndex) => {
     let ok = false

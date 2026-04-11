@@ -25,6 +25,8 @@ export type SessionConfig = {
   placedItems: PlacedItem[]
   solvedPuzzleIds: string[]
   circuitCompletedAt: string | null
+  /** Judge/admin approved the physical circuit (manual). */
+  circuitCorrect?: boolean
   /** Progress fields */
   solvedCount: number
   totalPuzzles: number

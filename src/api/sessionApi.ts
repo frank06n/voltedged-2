@@ -34,17 +34,21 @@ export async function startSession(teamName: string, teamLeadName: string): Prom
 }
 
 export async function updateSession(update: SessionUpdate): Promise<void> {
+  const body: Record<string, unknown> = {
+    sessionId: update.sessionId,
+    placedItems: update.placedItems,
+  }
+  if (update.inventory !== undefined) body.inventory = update.inventory
+  if (update.solvedPuzzleIds !== undefined) body.solvedPuzzleIds = update.solvedPuzzleIds
+
   const response = await fetch(`${API_BASE_URL}/api/session/update`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      sessionId: update.sessionId,
-      placedItems: update.placedItems,
-    }),
-  });
+    body: JSON.stringify(body),
+  })
 
   if (!response.ok) {
-    console.error('Failed to update session');
+    console.error('Failed to update session')
   }
 }
 
@@ -100,18 +104,26 @@ export async function verifyPuzzle(sessionId: string, puzzleId: string, answer: 
   }
 }
 
-export async function completeCircuit(sessionId: string): Promise<{ success: boolean; message?: string; completedAt?: string }> {
+export async function checkCircuit(sessionId: string): Promise<{
+  success: boolean
+  circuitCorrect?: boolean
+  completedAt?: string
+  message?: string
+}> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/session/circuit/complete`, {
+    const response = await fetch(`${API_BASE_URL}/api/session/circuit/check`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId }),
-    });
-
-    return await response.json();
+    })
+    const json = await response.json()
+    if (!response.ok) {
+      return { success: false, message: json?.message ?? 'Server error' }
+    }
+    return json
   } catch (err) {
-    console.error(err);
-    return { success: false, message: 'Network error' };
+    console.error(err)
+    return { success: false, message: 'Network error' }
   }
 }
 
