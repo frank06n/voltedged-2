@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { TILE_SIZE } from '../constants'
-import { getItemDisplayName } from '../data/itemDefinitions'
-import { getItemColor, isValidCell } from '../systems/gridSystem'
+import {
+  getComponentDisplayName,
+  getComponentImage,
+} from '../data/itemDefinitions'
+import { isValidCell } from '../systems/gridSystem'
 import { isInsidePlacementZone } from '../systems/placementZones'
+import { getWireConnections, getWireSpriteInfo } from '../systems/wireSystem'
 import { useGameStore } from '../store/gameState'
 
 type GridProps = {
@@ -12,6 +16,19 @@ type GridProps = {
 }
 
 const TOOLTIP_DELAY_MS = 500
+
+function formatVariantLabel(itemId: string, variant: string): string {
+  if (!variant) return ''
+  if (itemId === 'igbt') {
+    try {
+      const o = JSON.parse(variant) as { frequency?: number; dutyCycle?: number }
+      return `${o.frequency}Hz ${Math.round((o.dutyCycle ?? 0) * 100)}%`
+    } catch {
+      return variant
+    }
+  }
+  return variant
+}
 
 export function Grid({
   hoverWorld,
@@ -34,11 +51,11 @@ export function Grid({
   const startRow = Math.floor(camera.y / TILE_SIZE)
   const endRow = Math.ceil((camera.y + viewportHeight) / TILE_SIZE)
 
-  const items: { row: number; col: number; itemId: string }[] = []
+  const items: { row: number; col: number }[] = []
   for (let row = Math.max(0, startRow); row <= Math.min(grid.length - 1, endRow); row++) {
     for (let col = Math.max(0, startCol); col <= Math.min(grid[0].length - 1, endCol); col++) {
       const id = grid[row][col].itemId
-      if (id) items.push({ row, col, itemId: id })
+      if (id) items.push({ row, col })
     }
   }
 
@@ -64,7 +81,6 @@ export function Grid({
     return { row, col }
   }, [hoverWorld, grid])
 
-  /** Stable while cursor stays on the same cell (variant changes do not reset the 0.5s timer). */
   const hoveredItemCellKey = hoveredItemCell
     ? `${hoveredItemCell.row},${hoveredItemCell.col}`
     : null
@@ -115,25 +131,66 @@ export function Grid({
     grid[tooltipCell.row][tooltipCell.col].itemId
       ? (() => {
           const id = grid[tooltipCell.row][tooltipCell.col].itemId!
-          const name = getItemDisplayName(id)
-          const v = grid[tooltipCell.row][tooltipCell.col].variant
+          const name = getComponentDisplayName(id)
+          const v = formatVariantLabel(
+            id,
+            grid[tooltipCell.row][tooltipCell.col].variant,
+          )
           return v ? `${name} (${v})` : name
         })()
       : null
 
   return (
     <>
-      {items.map(({ row, col, itemId }) => (
-        <div
-          key={`${row}-${col}`}
-          className="grid-item"
-          style={{
-            left: col * TILE_SIZE,
-            top: row * TILE_SIZE,
-            background: getItemColor(itemId),
-          }}
-        />
-      ))}
+      {items.map(({ row, col }) => {
+        const tile = grid[row][col]
+        const itemId = tile.itemId!
+        if (itemId === 'wire') {
+          const conn = getWireConnections(grid, row, col)
+          const info = getWireSpriteInfo(conn)
+          return (
+            <div
+              key={`${row}-${col}`}
+              className="grid-item grid-item-wire"
+              style={{
+                left: col * TILE_SIZE,
+                top: row * TILE_SIZE,
+              }}
+            >
+              <img
+                src={info.src}
+                alt=""
+                draggable={false}
+                style={{
+                  transform: `rotate(${info.rotationDeg}deg)`,
+                }}
+              />
+            </div>
+          )
+        }
+        const src = getComponentImage(itemId)
+        return (
+          <div
+            key={`${row}-${col}`}
+            className="grid-item"
+            style={{
+              left: col * TILE_SIZE,
+              top: row * TILE_SIZE,
+            }}
+          >
+            {src ? (
+              <img
+                src={src}
+                alt=""
+                draggable={false}
+                style={{
+                  transform: `rotate(${tile.orientation * 90}deg)`,
+                }}
+              />
+            ) : null}
+          </div>
+        )
+      })}
       {hoverHighlight ? (
         <div
           className="hover-highlight"

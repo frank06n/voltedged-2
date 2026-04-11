@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { buildSessionSyncSnapshot, getPuzzleQuestion, syncSessionToApi } from '../api/sessionApi'
+import {
+  buildSessionSyncSnapshot,
+  getPuzzleQuestion,
+  syncSessionToApi,
+  verifyPuzzle,
+} from '../api/sessionApi'
 import { useGameStore } from '../store/gameState'
 
 type Feedback = 'idle' | 'correct' | 'wrong'
@@ -8,33 +13,53 @@ export function InteractionModal() {
   const activeModal = useGameStore((s) => s.activeModal)
   const setActiveModal = useGameStore((s) => s.setActiveModal)
   const markZoneSolved = useGameStore((s) => s.markZoneSolved)
-  const addRewardItems = useGameStore((s) => s.addRewardItems)
+  const applyServerInventory = useGameStore((s) => s.applyServerInventory)
   const [answer, setAnswer] = useState('')
   const [feedback, setFeedback] = useState<Feedback>('idle')
-  const [question, setQuestion] = useState<string | null>(null)
-  const [loadingQuestion, setLoadingQuestion] = useState(false)
+  const [questionLink, setQuestionLink] = useState<string | null>(null)
+  const [questionLoading, setQuestionLoading] = useState(false)
+  const [questionError, setQuestionError] = useState<string | null>(null)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Fetch the question from the backend when the modal opens
   useEffect(() => {
     setAnswer('')
     setFeedback('idle')
-    setQuestion(null)
+  }, [activeModal?.id])
 
-    if (!activeModal) return
+  useEffect(() => {
+    if (!activeModal?.id) {
+      setQuestionLink(null)
+      setQuestionLoading(false)
+      setQuestionError(null)
+      return
+    }
 
     const sessionId = useGameStore.getState().sessionId
-    if (!sessionId) return
+    if (!sessionId) {
+      setQuestionError('No session.')
+      setQuestionLink(null)
+      setQuestionLoading(false)
+      return
+    }
 
-    setLoadingQuestion(true)
+    let cancelled = false
+    setQuestionLoading(true)
+    setQuestionError(null)
+    setQuestionLink(null)
+
     getPuzzleQuestion(sessionId, activeModal.id).then((res) => {
+      if (cancelled) return
+      setQuestionLoading(false)
       if (res.success && res.question) {
-        setQuestion(res.question)
+        setQuestionLink(res.question.trim() || null)
       } else {
-        setQuestion('Failed to load question.')
+        setQuestionError(res.message ?? 'Could not load question link.')
       }
-      setLoadingQuestion(false)
     })
+
+    return () => {
+      cancelled = true
+    }
   }, [activeModal?.id])
 
   useEffect(() => {
@@ -45,11 +70,12 @@ export function InteractionModal() {
 
   if (!activeModal) return null
 
+  const linkHref = questionLink ?? ''
+
   const handleClose = () => {
     setActiveModal(null)
     setAnswer('')
     setFeedback('idle')
-    setQuestion(null)
   }
 
   const fireSync = () => {
@@ -65,19 +91,15 @@ export function InteractionModal() {
     const guess = answer.trim()
     const sessionId = useGameStore.getState().sessionId
     if (!sessionId) return
-    
-    const { verifyPuzzle } = await import('../api/sessionApi')
+
     const res = await verifyPuzzle(sessionId, activeModal.id, guess)
 
     if (res.success && res.inventory && res.solvedPuzzleIds) {
       setFeedback('correct')
-      
+
       markZoneSolved(activeModal.id)
-      
-      if (activeModal.rewardItems) {
-         addRewardItems(activeModal.rewardItems)
-      }
-      
+      applyServerInventory(res.inventory)
+
       fireSync()
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
       closeTimerRef.current = window.setTimeout(() => {
@@ -89,6 +111,20 @@ export function InteractionModal() {
     }
   }
 
+  const questionBlock = questionLoading ? (
+    <p className="modal-question-link">Loading question…</p>
+  ) : questionError ? (
+    <p className="modal-question-link modal-question-error">{questionError}</p>
+  ) : linkHref ? (
+    <p className="modal-question-link">
+      <a href={linkHref} target="_blank" rel="noreferrer">
+        Open question document
+      </a>
+    </p>
+  ) : (
+    <p className="modal-question-link">No link available for this puzzle.</p>
+  )
+
   if (activeModal.solved) {
     return (
       <div
@@ -98,10 +134,9 @@ export function InteractionModal() {
         aria-labelledby="puzzle-title"
       >
         <div className="modal-content">
-          <h2 id="puzzle-title">{question ?? 'Puzzle'}</h2>
-          <p className="modal-solved-text">
-            Completed.
-          </p>
+          <h2 id="puzzle-title">Puzzle</h2>
+          {questionBlock}
+          <p className="modal-solved-text">Completed.</p>
           <div className="modal-actions">
             <button type="button" className="secondary" onClick={handleClose}>
               Close
@@ -120,11 +155,8 @@ export function InteractionModal() {
       aria-labelledby="puzzle-title"
     >
       <div className="modal-content">
-        {loadingQuestion ? (
-          <h2 id="puzzle-title">Loading question…</h2>
-        ) : (
-          <h2 id="puzzle-title">{question ?? 'Unknown question'}</h2>
-        )}
+        <h2 id="puzzle-title">Puzzle</h2>
+        {questionBlock}
         <input
           type="text"
           value={answer}
@@ -133,8 +165,8 @@ export function InteractionModal() {
             setFeedback('idle')
           }}
           placeholder="Your answer"
-          autoFocus
-          disabled={loadingQuestion}
+          autoFocus={!questionLoading}
+          disabled={questionLoading}
           onKeyDown={(e) => {
             if (e.key === 'Escape') handleClose()
             if (e.key === 'Enter') handleSubmit()
@@ -147,7 +179,11 @@ export function InteractionModal() {
           <p className="modal-feedback modal-feedback-wrong">Try again.</p>
         ) : null}
         <div className="modal-actions">
-          <button type="button" onClick={handleSubmit} disabled={loadingQuestion}>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={questionLoading}
+          >
             Submit
           </button>
           <button type="button" className="secondary" onClick={handleClose}>

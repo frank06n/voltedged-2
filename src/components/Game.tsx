@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { buildSessionSyncSnapshot, completeCircuit, syncSessionToApi } from '../api/sessionApi'
+import {
+  API_BASE_URL,
+  buildSessionSyncSnapshot,
+  completeCircuit,
+  syncSessionToApi,
+} from '../api/sessionApi'
 import { getItemVariantOptions } from '../data/itemDefinitions'
+import { useGameAudio } from '../hooks/useGameAudio'
 import { useGameLoop } from '../hooks/useGameLoop'
 import { useKeyboard } from '../hooks/useKeyboard'
 import { useMouse } from '../hooks/useMouse'
@@ -22,7 +28,15 @@ import { World } from './World'
 const SYNC_COOLDOWN_MS = 5000    // 5s cooldown for sync
 const CIRCUIT_COOLDOWN_MS = 10000 // 10s cooldown for circuit complete
 
+const MUSIC_STORAGE_KEY = 'voltedge_music_enabled'
+
 export function Game({ onLogout }: { onLogout: () => void }) {
+  const [musicEnabled, setMusicEnabled] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return localStorage.getItem(MUSIC_STORAGE_KEY) !== 'false'
+  })
+  useGameAudio(musicEnabled)
+
   const keysRef = useKeyboard()
   const { mousePos, screenToWorld, worldToGrid } = useMouse()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -54,9 +68,16 @@ export function Game({ onLogout }: { onLogout: () => void }) {
   // Circuit cooldown state
   const [circuitCooldown, setCircuitCooldown] = useState(false)
 
+  const toggleMusic = () => {
+    setMusicEnabled((prev) => {
+      const next = !prev
+      localStorage.setItem(MUSIC_STORAGE_KEY, String(next))
+      return next
+    })
+  }
+
   const handleLogout = async () => {
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
       await fetch(`${API_BASE_URL}/api/session/logout`, { method: 'POST' });
     } catch {
       // ignore network errors
@@ -79,6 +100,10 @@ export function Game({ onLogout }: { onLogout: () => void }) {
     setSyncCooldown(true)
     setTimeout(() => setSyncCooldown(false), SYNC_COOLDOWN_MS)
     setTimeout(() => setSyncMsg(''), 3000)
+  }
+
+  const fireSync = () => {
+    void syncSessionToApi(buildSessionSyncSnapshot(useGameStore.getState()))
   }
 
   const handleCircuitComplete = async () => {
@@ -139,12 +164,48 @@ export function Game({ onLogout }: { onLogout: () => void }) {
       if (state.activeModal) return
 
       const k = e.key.toLowerCase()
-      if (k >= '1' && k <= '8') {
+
+      if (e.shiftKey && k >= '1' && k <= '6') {
+        const idx = 9 + Number.parseInt(k, 10)
+        state.setHotbarActive(idx)
+        e.preventDefault()
+        return
+      }
+
+      if (k >= '1' && k <= '9') {
         const idx = Number.parseInt(k, 10) - 1
         state.setHotbarActive(idx)
         e.preventDefault()
         return
       }
+
+      if (k === '0') {
+        state.setHotbarActive(9)
+        e.preventDefault()
+        return
+      }
+
+      if (k === 'r') {
+        const hw = hoverWorldRef.current
+        if (hw) {
+          const { gridCol, gridRow } = worldToGrid(hw.x, hw.y)
+          if (
+            isInsidePlacementZone(hw.x, hw.y) &&
+            isValidCell(gridRow, gridCol)
+          ) {
+            const cell = state.grid[gridRow][gridCol]
+            if (cell.itemId) {
+              if (state.cycleOrientation(gridRow, gridCol)) {
+                e.preventDefault()
+                fireSync()
+                return
+              }
+            }
+          }
+        }
+        return
+      }
+
       if (k === 'e') {
         const hw = hoverWorldRef.current
         if (hw) {
@@ -290,6 +351,23 @@ export function Game({ onLogout }: { onLogout: () => void }) {
       />
       <Hotbar />
       <InteractionModal />
+
+      {/* Music */}
+      <button
+        type="button"
+        onClick={toggleMusic}
+        style={{
+          ...btnBase,
+          left: '16px',
+          background: musicEnabled
+            ? 'rgba(80, 120, 200, 0.85)'
+            : 'rgba(80, 80, 80, 0.75)',
+        }}
+        aria-pressed={musicEnabled}
+        title="Background music"
+      >
+        {musicEnabled ? 'Music: On' : 'Music: Off'}
+      </button>
 
       {/* Logout */}
       <button 

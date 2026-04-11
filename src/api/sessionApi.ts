@@ -5,7 +5,13 @@ import type {
   SessionUpdate,
 } from './types'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+/**
+ * Dev: empty string → same-origin requests so Vite proxies `/api` to the backend (no CORS).
+ * Override with `VITE_API_BASE_URL` to call the API directly (backend CORS must allow your origin).
+ */
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ??
+  (import.meta.env.DEV ? '' : 'http://localhost:3000')
 
 export async function startSession(teamName: string, teamLeadName: string): Promise<SessionConfig> {
   const response = await fetch(`${API_BASE_URL}/api/session/start`, {
@@ -42,6 +48,28 @@ export async function updateSession(update: SessionUpdate): Promise<void> {
   }
 }
 
+export async function getPuzzleQuestion(
+  sessionId: string,
+  puzzleId: string,
+): Promise<{ success: boolean; question?: string; solved?: boolean; message?: string }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/session/puzzle/get`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, puzzleId }),
+    })
+
+    if (!response.ok) {
+      return { success: false, message: 'Server error' }
+    }
+
+    return await response.json()
+  } catch (err) {
+    console.error(err)
+    return { success: false, message: 'Network error' }
+  }
+}
+
 export async function verifyPuzzle(sessionId: string, puzzleId: string, answer: string): Promise<{ success: boolean; message?: string; inventory?: InventorySlotConfig[]; solvedPuzzleIds?: string[] }> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/session/puzzle/verify`, {
@@ -60,37 +88,6 @@ export async function verifyPuzzle(sessionId: string, puzzleId: string, answer: 
     return { success: false, message: 'Network error' }
   }
 }
-
-export async function getPuzzleQuestion(sessionId: string, puzzleId: string): Promise<{ success: boolean; question?: string; solved?: boolean; message?: string }> {
-  // Return cached result if available
-  const cacheKey = `${sessionId}_${puzzleId}`
-  if (puzzleQuestionCache.has(cacheKey)) {
-    return puzzleQuestionCache.get(cacheKey)!
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/session/puzzle/get`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId, puzzleId }),
-    });
-
-    if (!response.ok) {
-      return { success: false, message: 'Server error' };
-    }
-
-    const result = await response.json();
-    if (result.success) {
-      puzzleQuestionCache.set(cacheKey, result)
-    }
-    return result;
-  } catch (err) {
-    console.error(err);
-    return { success: false, message: 'Network error' };
-  }
-}
-
-const puzzleQuestionCache = new Map<string, { success: boolean; question?: string; solved?: boolean; message?: string }>()
 
 export async function completeCircuit(sessionId: string): Promise<{ success: boolean; message?: string; completedAt?: string }> {
   try {
@@ -120,7 +117,7 @@ export function buildSessionSyncSnapshot(
     sessionId: string | null
     teamName: string | null
     hotbar: { slots: { itemId: string; quantity: number }[] | (null | { itemId: string; quantity: number })[] }
-    grid: { itemId: string | null; variant: string }[][]
+    grid: { itemId: string | null; variant: string; orientation: number }[][]
     solvedPuzzleIds: string[]
   },
 ): SessionSyncSnapshot {
@@ -135,11 +132,13 @@ export function buildSessionSyncSnapshot(
       const id = state.grid[r][c].itemId
       if (id) {
         const variant = state.grid[r][c].variant
+        const orientation = state.grid[r][c].orientation
         placedItems.push({
           row: r,
           col: c,
           itemId: id,
           ...(variant ? { variant } : {}),
+          ...(orientation !== 0 ? { orientation } : {}),
         })
       }
     }

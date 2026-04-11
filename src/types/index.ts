@@ -1,9 +1,17 @@
-import type { SessionConfig } from '../api/types'
+import type { InventorySlotConfig, SessionConfig } from '../api/types'
 
 export type Player = {
   x: number
   y: number
   speed: number
+  /** Sprite faces left by default; true = flip for moving right. */
+  facingRight: boolean
+  /** Current run animation frame 0–3 (used when moving). */
+  runFrame: number
+  /** Accumulator (ms) for advancing run frames. */
+  runAnimMs: number
+  /** True while WASD movement this tick (idle sprite vs run cycle). */
+  moving: boolean
 }
 
 export type Camera = {
@@ -14,6 +22,7 @@ export type Camera = {
 export type Tile = {
   itemId: string | null
   variant: string
+  orientation: number
 }
 
 export type InventorySlot = {
@@ -32,8 +41,8 @@ export type InteractionZone = {
   y: number
   width: number
   height: number
+  /** Unused at zone creation; question link is loaded in the modal via POST /api/session/puzzle/get. */
   question: string
-  correctAnswer?: string
   rewardItems: { itemId: string; quantity: number }[]
   solved: boolean
 }
@@ -61,7 +70,10 @@ export type GameState = {
   consumeItem: (slotIndex: number) => boolean
   returnItem: (itemId: string) => boolean
   markZoneSolved: (zoneId: string) => void
+  /** Replace hotbar from API inventory (e.g. after puzzle verify). */
+  applyServerInventory: (inventory: InventorySlotConfig[]) => void
   addRewardItems: (items: { itemId: string; quantity: number }[]) => void
   cycleVariant: (row: number, col: number) => boolean
+  cycleOrientation: (row: number, col: number) => boolean
   clearVariantJustCycled: () => void
 }

@@ -1,14 +1,3 @@
-export type PuzzleConfig = {
-  id: string
-  x: number
-  y: number
-  width: number
-  height: number
-  question: string
-  correctAnswer?: string
-  rewardItems: { itemId: string; quantity: number }[]
-}
-
 export type InventorySlotConfig = {
   itemId: string
   quantity: number
@@ -19,6 +8,7 @@ export type PlacedItem = {
   col: number
   itemId: string
   variant?: string
+  orientation?: number
 }
 
 export type SessionConfig = {
@@ -29,6 +19,7 @@ export type SessionConfig = {
   worldWidth: number
   worldHeight: number
   playerStart: { x: number; y: number }
+  /** Which puzzles are active this session; question links loaded on demand via /puzzle/get. */
   assignedPuzzleIds: string[]
   inventory: InventorySlotConfig[]
   placedItems: PlacedItem[]

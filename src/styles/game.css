@@ -86,35 +86,64 @@ body,
   position: absolute;
   inset: 0;
   z-index: 0;
+  user-select: none;
 }
 
-.world-bg-layer > div {
+.world-bg-layer .world-map-bg {
   position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  image-rendering: pixelated;
 }
 
 .world {
   position: absolute;
-  width: 3000px;
-  height: 3000px;
 }
 
 .player {
   position: absolute;
   width: 32px;
-  height: 32px;
-  background: #4a9eff;
-  border-radius: 4px;
+  height: 64px;
   z-index: 10;
   pointer-events: none;
+  overflow: visible;
+}
+
+.player-sprite {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  height: 64px;
+  width: auto;
+  display: block;
+  image-rendering: pixelated;
+  transform-origin: center bottom;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .grid-item {
   position: absolute;
   width: 32px;
   height: 32px;
-  border-radius: 2px;
+  overflow: hidden;
   z-index: 5;
+  user-select: none;
+}
+
+.grid-item img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  image-rendering: pixelated;
+  transform-origin: center center;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .hover-highlight {
@@ -167,16 +196,20 @@ body,
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: min(96vw, 520px);
+  gap: 3px;
   z-index: 100;
   padding: 6px;
   background: rgba(0, 0, 0, 0.7);
   border-radius: 8px;
+  user-select: none;
 }
 
 .hotbar-slot {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   display: flex;
@@ -214,6 +247,8 @@ body,
 .hotbar-slot .item-swatch-img {
   object-fit: cover;
   display: block;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .slot-quantity {

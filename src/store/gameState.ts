@@ -4,13 +4,15 @@ import {
   GRID_COLS,
   GRID_ROWS,
   HOTBAR_SLOTS,
+  PLAYER_HEIGHT,
   PLAYER_SPEED,
+  PLAYER_WIDTH,
   WORLD_HEIGHT,
   WORLD_WIDTH,
 } from '../constants'
 import {
   getItemVariantOptions,
-  initialVariantForItem,
+  initialVariantForComponent,
 } from '../data/itemDefinitions'
 import {
   addItems,
@@ -23,7 +25,11 @@ import { PUZZLE_LOCATIONS } from '../data/puzzleLocations'
 
 function createEmptyGrid(): Tile[][] {
   return Array.from({ length: GRID_ROWS }, () =>
-    Array.from({ length: GRID_COLS }, () => ({ itemId: null, variant: '' })),
+    Array.from({ length: GRID_COLS }, () => ({
+      itemId: null,
+      variant: '',
+      orientation: 0,
+    })),
   )
 }
 
@@ -41,7 +47,7 @@ function puzzlesToZones(
         y: loc.y,
         width: loc.width,
         height: loc.height,
-        question: '', // fetched on-demand from backend
+        question: '',
         rewardItems: loc.rewardItems,
         solved: solvedIds.includes(id),
       }
@@ -61,10 +67,13 @@ function applyPlacedItems(grid: Tile[][], placed: SessionConfig['placedItems']):
       const variant =
         p.variant !== undefined && p.variant !== ''
           ? p.variant
-          : initialVariantForItem(itemId)
+          : initialVariantForComponent(itemId)
+      const orientation = p.orientation ?? 0
       next = next.map((r, ri) =>
         ri === row
-          ? r.map((c, ci) => (ci === col ? { itemId, variant } : c))
+          ? r.map((c, ci) =>
+              ci === col ? { itemId, variant, orientation } : c,
+            )
           : r,
       )
     }
@@ -74,9 +83,13 @@ function applyPlacedItems(grid: Tile[][], placed: SessionConfig['placedItems']):
 
 export const useGameStore = create<GameState>((set) => ({
   player: {
-    x: WORLD_WIDTH / 2 - 16,
-    y: WORLD_HEIGHT / 2 - 16,
+    x: WORLD_WIDTH / 2 - PLAYER_WIDTH / 2,
+    y: WORLD_HEIGHT / 2 - PLAYER_HEIGHT / 2,
     speed: PLAYER_SPEED,
+    facingRight: false,
+    runFrame: 0,
+    runAnimMs: 0,
+    moving: false,
   },
   camera: { x: 0, y: 0 },
   grid: createEmptyGrid(),
@@ -120,6 +133,10 @@ export const useGameStore = create<GameState>((set) => ({
         x: config.playerStart.x,
         y: config.playerStart.y,
         speed: PLAYER_SPEED,
+        facingRight: false,
+        runFrame: 0,
+        runAnimMs: 0,
+        moving: false,
       },
       camera: { x: 0, y: 0 },
       grid,
@@ -175,6 +192,14 @@ export const useGameStore = create<GameState>((set) => ({
       ),
     })),
 
+  applyServerInventory: (inventory) =>
+    set((state) => ({
+      hotbar: {
+        ...state.hotbar,
+        slots: inventoryConfigToSlots(inventory),
+      },
+    })),
+
   addRewardItems: (items) =>
     set((state) => ({
       hotbar: {
@@ -209,7 +234,13 @@ export const useGameStore = create<GameState>((set) => ({
       const newGrid = state.grid.map((r, ri) =>
         ri === row
           ? r.map((c, ci) =>
-              ci === col ? { itemId, variant: nextVariant } : c,
+              ci === col
+                ? {
+                    itemId,
+                    variant: nextVariant,
+                    orientation: cell.orientation,
+                  }
+                : c,
             )
           : r,
       )
@@ -219,6 +250,45 @@ export const useGameStore = create<GameState>((set) => ({
       }
     })
     return cycled
+  },
+
+  cycleOrientation: (row, col) => {
+    let ok = false
+    set((state) => {
+      if (
+        row < 0 ||
+        row >= GRID_ROWS ||
+        col < 0 ||
+        col >= GRID_COLS
+      ) {
+        return state
+      }
+      const cell = state.grid[row][col]
+      const itemId = cell.itemId
+      if (!itemId) return state
+      if (itemId === 'wire') return state
+
+      ok = true
+      const nextO = (cell.orientation + 1) % 4
+      const newGrid = state.grid.map((r, ri) =>
+        ri === row
+          ? r.map((c, ci) =>
+              ci === col
+                ? {
+                    itemId,
+                    variant: cell.variant,
+                    orientation: nextO,
+                  }
+                : c,
+            )
+          : r,
+      )
+      return {
+        grid: newGrid,
+        variantJustCycledCell: { row, col },
+      }
+    })
+    return ok
   },
 
   clearVariantJustCycled: () => set({ variantJustCycledCell: null }),
