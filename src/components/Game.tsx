@@ -344,11 +344,21 @@ export function Game({ onLogout }: { onLogout: () => void }) {
       />
       <Hotbar />
       <InteractionModal />
-<<<<<<< main
       <ProgressBar />
 
       {/* Top-right action buttons */}
       <div className="game-actions">
+              {/* Music */}
+      <button
+        type="button"
+        onClick={toggleMusic}
+        className={`retro-btn ${musicEnabled ? 'retro-btn--done' : ''}`}
+        aria-pressed={musicEnabled}
+        title="Background music"
+      >
+        {musicEnabled ? 'Music: On' : 'Music: Off'}
+      </button>
+      
         <button
           className={`retro-btn ${circuitDone ? 'retro-btn--done' : ''}`}
           onClick={handleCircuitComplete}
@@ -372,61 +382,6 @@ export function Game({ onLogout }: { onLogout: () => void }) {
           Logout
         </button>
       </div>
-=======
-
-      {/* Music */}
-      <button
-        type="button"
-        onClick={toggleMusic}
-        style={{
-          ...btnBase,
-          left: '16px',
-          background: musicEnabled
-            ? 'rgba(80, 120, 200, 0.85)'
-            : 'rgba(80, 80, 80, 0.75)',
-        }}
-        aria-pressed={musicEnabled}
-        title="Background music"
-      >
-        {musicEnabled ? 'Music: On' : 'Music: Off'}
-      </button>
-
-      {/* Logout */}
-      <button 
-        onClick={handleLogout} 
-        style={{ ...btnBase, right: '16px', background: 'rgba(255, 50, 50, 0.8)' }}
-      >
-        Logout
-      </button>
-
-      {/* Sync Circuit */}
-      <button
-        onClick={handleSync}
-        disabled={syncing || syncCooldown}
-        style={{
-          ...btnBase,
-          right: '100px',
-          background: syncing ? 'rgba(200, 200, 50, 0.8)' : syncCooldown ? 'rgba(100, 100, 100, 0.6)' : 'rgba(50, 200, 150, 0.8)',
-          cursor: (syncing || syncCooldown) ? 'default' : 'pointer',
-        }}
-      >
-        {syncing ? 'Syncing…' : syncCooldown ? 'Wait…' : '⟳ Sync'}
-      </button>
-
-      {/* Complete Circuit */}
-      <button
-        onClick={handleCircuitComplete}
-        disabled={circuitDone || circuitCooldown}
-        style={{
-          ...btnBase,
-          right: '200px',
-          background: circuitDone ? 'rgba(50, 200, 50, 0.8)' : circuitCooldown ? 'rgba(100, 100, 100, 0.6)' : 'rgba(50, 150, 255, 0.8)',
-          cursor: (circuitDone || circuitCooldown) ? 'default' : 'pointer',
-        }}
-      >
-        {circuitDone ? '✓ Circuit Done' : circuitCooldown ? 'Wait 10s…' : 'Complete Circuit'}
-      </button>
->>>>>>> main
 
       {/* Status messages */}
       {(syncMsg || circuitMsg) && (
