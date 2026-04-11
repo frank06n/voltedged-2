@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;700;900&display=swap');
+
 * {
   margin: 0;
   padding: 0;
@@ -17,8 +19,10 @@ body,
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #1a1a2e;
+  background: #0a0a14;
 }
+
+/* ── Start Screen ─────────────────────────────────── */
 
 .start-screen {
   width: 100vw;
@@ -26,22 +30,27 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1a1a2e;
+  background: #0a0a14;
   color: #fff;
-  font-family: system-ui, sans-serif;
+  font-family: 'Share Tech Mono', monospace;
 }
 
 .start-card {
-  background: #2a2a3e;
+  background: #111120;
   padding: 48px;
-  border-radius: 16px;
+  border-radius: 4px;
   text-align: center;
   min-width: 360px;
+  border: 1px solid #2a3a2a;
+  box-shadow: 0 0 20px rgba(50, 255, 120, 0.06);
 }
 
 .start-card h1 {
   margin-bottom: 8px;
   font-size: 32px;
+  font-family: 'Orbitron', monospace;
+  color: #c8ffc8;
+  text-shadow: 0 0 8px rgba(50, 255, 120, 0.3);
 }
 
 .start-card p {
@@ -52,27 +61,43 @@ body,
 .start-card input {
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.3);
-  color: #fff;
+  border: 1px solid #2a3a2a;
+  border-radius: 2px;
+  background: #0a0f0a;
+  color: #c8ffc8;
   font-size: 16px;
+  font-family: 'Share Tech Mono', monospace;
   margin-bottom: 16px;
+}
+
+.start-card input:focus {
+  outline: none;
+  border-color: #3a6a3a;
+  box-shadow: 0 0 6px rgba(50, 255, 120, 0.15);
 }
 
 .start-card button {
   width: 100%;
   padding: 12px;
-  border: none;
-  border-radius: 8px;
-  background: #4a9eff;
-  color: #fff;
+  border: 1px solid #3a6a3a;
+  border-radius: 2px;
+  background: #1a2a1a;
+  color: #c8ffc8;
   font-size: 16px;
+  font-family: 'Share Tech Mono', monospace;
   cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.start-card button:hover {
+  background: #243a24;
+  box-shadow: 0 0 12px rgba(50, 255, 120, 0.15);
 }
 
 .start-card button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -81,6 +106,8 @@ body,
   margin-top: 12px;
   font-size: 14px;
 }
+
+/* ── World, Player, Grid ─────────────────────────── */
 
 .world-bg-layer {
   position: absolute;
@@ -178,6 +205,8 @@ body,
   border: 1px dashed rgba(80, 200, 120, 0.5);
 }
 
+/* ── Hotbar ───────────────────────────────────────── */
+
 .hotbar {
   position: fixed;
   bottom: 20px;
@@ -190,32 +219,40 @@ body,
   gap: 3px;
   z-index: 100;
   padding: 6px;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 8px;
+  background: rgba(8, 12, 8, 0.85);
+  border: 1px solid #1a2a1a;
+  border-radius: 3px;
   user-select: none;
 }
 
 .hotbar-slot {
   width: 40px;
   height: 40px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  border: 1px solid #1e3a1e;
+  border-radius: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #c8ffc8;
   font-size: 12px;
   position: relative;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(20, 35, 20, 0.6);
   cursor: pointer;
   padding: 0;
   font: inherit;
+  font-family: 'Share Tech Mono', monospace;
   appearance: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.hotbar-slot:hover {
+  border-color: #3a6a3a;
 }
 
 .hotbar-slot.active {
-  border-color: #4a9eff;
-  background: rgba(74, 158, 255, 0.15);
+  border-color: #50c878;
+  background: rgba(50, 200, 120, 0.12);
+  box-shadow: 0 0 6px rgba(50, 200, 120, 0.2);
 }
 
 .hotbar-slot .key-hint {
@@ -223,7 +260,8 @@ body,
   top: 2px;
   left: 4px;
   font-size: 10px;
-  opacity: 0.5;
+  opacity: 0.4;
+  color: #8aba8a;
 }
 
 .hotbar-slot .item-swatch {
@@ -245,15 +283,17 @@ body,
   right: 4px;
   font-size: 11px;
   font-weight: bold;
-  color: #fff;
+  color: #c8ffc8;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   pointer-events: none;
 }
 
+/* ── Puzzle Modal ─────────────────────────────────── */
+
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -261,23 +301,42 @@ body,
 }
 
 .modal-content {
-  background: #2a2a3e;
+  background: #111120;
   padding: 32px;
-  border-radius: 12px;
-  color: #fff;
+  border-radius: 4px;
+  color: #d0e8d0;
   min-width: 400px;
   max-width: 90vw;
+  border: 1px solid #2a3a2a;
+  font-family: 'Share Tech Mono', monospace;
+  box-shadow: 0 0 30px rgba(50, 255, 120, 0.06);
+}
+
+.modal-content h2 {
+  font-family: 'Orbitron', monospace;
+  color: #c8ffc8;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .modal-content input {
   width: 100%;
   padding: 8px 12px;
   margin-top: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.3);
-  color: #fff;
+  border: 1px solid #2a3a2a;
+  border-radius: 2px;
+  background: #0a0f0a;
+  color: #c8ffc8;
   font-size: 16px;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.modal-content input:focus {
+  outline: none;
+  border-color: #3a6a3a;
+  box-shadow: 0 0 6px rgba(50, 255, 120, 0.15);
 }
 
 .modal-actions {
@@ -288,16 +347,32 @@ body,
 
 .modal-content button {
   padding: 8px 20px;
-  border: none;
-  border-radius: 6px;
-  background: #4a9eff;
-  color: #fff;
+  border: 1px solid #3a6a3a;
+  border-radius: 2px;
+  background: #1a2a1a;
+  color: #c8ffc8;
   cursor: pointer;
   font-size: 14px;
+  font-family: 'Share Tech Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.modal-content button:hover {
+  background: #243a24;
+  box-shadow: 0 0 8px rgba(50, 255, 120, 0.15);
 }
 
 .modal-content button.secondary {
-  background: rgba(255, 255, 255, 0.15);
+  background: #161622;
+  border-color: #2a2a3a;
+  color: #888;
+}
+
+.modal-content button.secondary:hover {
+  background: #1e1e2e;
+  color: #aaa;
 }
 
 .modal-feedback {
@@ -306,7 +381,7 @@ body,
 }
 
 .modal-feedback-correct {
-  color: #6ee7a0;
+  color: #50c878;
 }
 
 .modal-feedback-wrong {
@@ -317,4 +392,557 @@ body,
   margin-top: 16px;
   opacity: 0.9;
   line-height: 1.5;
+  color: #50c878;
 }
+
+/* ── Top-Right Action Buttons ─────────────────────── */
+
+.game-actions {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.retro-btn {
+  padding: 7px 14px;
+  border: 1px solid #2a3a2a;
+  border-radius: 2px;
+  background: #0e160e;
+  color: #8aba8a;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.retro-btn:hover:not(:disabled) {
+  background: #162216;
+  border-color: #3a6a3a;
+  color: #c8ffc8;
+  box-shadow: 0 0 10px rgba(50, 255, 120, 0.1);
+}
+
+.retro-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.retro-btn--danger {
+  border-color: #3a1a1a;
+  color: #c87070;
+}
+
+.retro-btn--danger:hover:not(:disabled) {
+  border-color: #6a2a2a;
+  color: #ffa0a0;
+  background: #1a0e0e;
+  box-shadow: 0 0 10px rgba(255, 80, 80, 0.08);
+}
+
+.retro-btn--active {
+  border-color: #3a6a3a;
+  color: #50c878;
+  background: #0e1a0e;
+}
+
+.retro-btn--done {
+  border-color: #2a4a2a;
+  color: #50c878;
+}
+
+.game-status-msg {
+  position: absolute;
+  top: 50px;
+  right: 16px;
+  z-index: 1000;
+  background: #0e160e;
+  border: 1px solid #1a2a1a;
+  color: #8aba8a;
+  padding: 4px 12px;
+  border-radius: 2px;
+  font-size: 12px;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+/* ── Progress HUD ─────────────────────────────────── */
+
+.progress-hud {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1000;
+  width: 220px;
+  padding: 10px 14px 12px;
+  background: #0e160e;
+  border: 1px solid #1a2a1a;
+  border-radius: 2px;
+  font-family: 'Share Tech Mono', monospace;
+  color: #8aba8a;
+  user-select: none;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.progress-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #6a8a6a;
+}
+
+.progress-pct {
+  font-size: 13px;
+  font-family: 'Orbitron', monospace;
+  font-weight: 600;
+  color: #50c878;
+  text-shadow: 0 0 6px rgba(80, 200, 120, 0.3);
+}
+
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background: #0a100a;
+  border: 1px solid #1a2a1a;
+  border-radius: 1px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 0;
+  background: #50c878;
+  box-shadow: 0 0 8px rgba(80, 200, 120, 0.4);
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 3px;
+  height: 100%;
+  background: #90ffb0;
+  box-shadow: 0 0 4px rgba(150, 255, 180, 0.6);
+  opacity: 0.8;
+}
+
+.progress-solved-count {
+  margin-top: 6px;
+  font-size: 13px;
+  font-family: 'Orbitron', monospace;
+  font-weight: 600;
+  color: #c8ffc8;
+  letter-spacing: 0.5px;
+}
+
+.progress-hint {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #5a7a5a;
+  line-height: 1.4;
+}
+
+.progress-hint strong {
+  color: #e8c840;
+}
+
+.progress-hint--done {
+  color: #50c878;
+}
+
+/* ── Circuit Hint Banner (top center) ────────────── */
+
+.circuit-hint-banner {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  background: #0e160e;
+  border: 1px solid #2a4a2a;
+  border-radius: 3px;
+  font-family: 'Share Tech Mono', monospace;
+  white-space: nowrap;
+  animation: banner-slide-down 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes banner-slide-down {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.circuit-hint-tag {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #0e160e;
+  background: #e8c840;
+  padding: 2px 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.circuit-hint-text {
+  font-size: 12px;
+  color: #c8ffc8;
+  letter-spacing: 0.3px;
+}
+
+/* ── Congrats Modal ──────────────────────────────── */
+
+.congrats-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 350;
+  animation: unlock-bg-in 0.3s ease-out;
+}
+
+.congrats-modal {
+  background: #0e160e;
+  border: 1px solid #2a4a2a;
+  border-radius: 4px;
+  padding: 36px 48px;
+  text-align: center;
+  min-width: 360px;
+  max-width: 90vw;
+  font-family: 'Share Tech Mono', monospace;
+  position: relative;
+  animation: unlock-pop-in 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.congrats-modal::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 2px solid transparent;
+  border-image: linear-gradient(
+    135deg,
+    rgba(232, 200, 64, 0.4) 0%,
+    rgba(80, 200, 120, 0.4) 50%,
+    rgba(232, 200, 64, 0.4) 100%
+  ) 1;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.congrats-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: #e8c840;
+  text-shadow: 0 0 15px rgba(232, 200, 64, 0.3);
+  margin-bottom: 12px;
+}
+
+.congrats-subtitle {
+  font-size: 14px;
+  color: #50c878;
+  margin-bottom: 8px;
+}
+
+.congrats-time {
+  font-size: 12px;
+  color: #5a7a5a;
+  margin-bottom: 24px;
+}
+
+.congrats-dismiss {
+  padding: 8px 28px;
+  border: 1px solid #2a4a2a;
+  border-radius: 2px;
+  background: #0e160e;
+  color: #e8c840;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.congrats-dismiss:hover {
+  background: #1a2a1a;
+  border-color: #4a6a4a;
+  box-shadow: 0 0 10px rgba(232, 200, 64, 0.1);
+}
+
+/* ── Component Unlock Modal ──────────────────────── */
+
+.unlock-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  animation: unlock-bg-in 0.2s ease-out;
+}
+
+@keyframes unlock-bg-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.unlock-modal {
+  background: #0e160e;
+  border: 1px solid #2a4a2a;
+  border-radius: 4px;
+  padding: 28px 36px;
+  text-align: center;
+  min-width: 320px;
+  max-width: 90vw;
+  font-family: 'Share Tech Mono', monospace;
+  position: relative;
+  overflow: hidden;
+  animation: unlock-pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.unlock-modal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid transparent;
+  border-image: linear-gradient(
+    135deg,
+    rgba(80, 200, 120, 0.3) 0%,
+    transparent 40%,
+    transparent 60%,
+    rgba(80, 200, 120, 0.3) 100%
+  ) 1;
+  pointer-events: none;
+}
+
+@keyframes unlock-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.unlock-header {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #50c878;
+  margin-bottom: 20px;
+  text-shadow: 0 0 10px rgba(80, 200, 120, 0.3);
+}
+
+.unlock-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.unlock-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px;
+  background: #0a120a;
+  border: 1px solid #1e3a1e;
+  border-radius: 3px;
+  min-width: 200px;
+}
+
+.unlock-item-icon {
+  width: 36px;
+  height: 36px;
+  background: #0e1a0e;
+  border: 1px solid #2a4a2a;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.unlock-item-icon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.unlock-item-info {
+  text-align: left;
+}
+
+.unlock-item-name {
+  font-size: 14px;
+  color: #c8ffc8;
+  font-weight: 600;
+}
+
+.unlock-item-qty {
+  font-size: 11px;
+  color: #5a7a5a;
+  margin-top: 1px;
+}
+
+.unlock-dismiss {
+  margin-top: 22px;
+  padding: 7px 24px;
+  border: 1px solid #2a3a2a;
+  border-radius: 2px;
+  background: #0e160e;
+  color: #6a8a6a;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.unlock-dismiss:hover {
+  background: #162216;
+  border-color: #3a6a3a;
+  color: #c8ffc8;
+}
+
+/* ── Inline unlock in modal (correct answer) ─────── */
+.modal-unlocked {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #0e1a0e;
+  border: 1px solid #1e3a1e;
+  border-radius: 3px;
+}
+
+.modal-unlocked-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #50c878;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modal-unlocked-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #c8ffc8;
+}
+
+.modal-unlocked-item img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* ── Game Over / Thanks Screen ───────────────────── */
+
+.game-over-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 4, 2, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  animation: game-over-fade-in 0.8s ease-out;
+}
+
+@keyframes game-over-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.game-over-content {
+  text-align: center;
+  animation: game-over-scale-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+@keyframes game-over-scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.game-over-title {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(36px, 8vw, 72px);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 6px;
+  color: #e8c840;
+  text-shadow:
+    0 0 20px rgba(232, 200, 64, 0.4),
+    0 0 60px rgba(232, 200, 64, 0.15),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  margin-bottom: 24px;
+  line-height: 1.2;
+}
+
+.game-over-credit {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: clamp(14px, 2.5vw, 20px);
+  color: #50c878;
+  letter-spacing: 1px;
+  opacity: 0;
+  animation: credit-fade-in 0.6s ease-out 0.9s forwards;
+  text-shadow: 0 0 10px rgba(80, 200, 120, 0.3);
+}
+
+@keyframes credit-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 0.85;
+    transform: translateY(0);
+  }
+}
+

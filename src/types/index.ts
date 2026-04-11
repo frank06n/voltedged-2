@@ -35,7 +35,7 @@ export type InteractionZone = {
   height: number
   /** Unused at zone creation; question link is loaded in the modal via POST /api/session/puzzle/get. */
   question: string
-  rewardItems: { itemId: string; quantity: number }[]
+  rewardItems?: { itemId: string; quantity: number }[]
   solved: boolean
 }
 
@@ -48,8 +48,16 @@ export type GameState = {
   activeModal: InteractionZone | null
   sessionId: string | null
   teamName: string | null
+  shift: number
   solvedPuzzleIds: string[]
   variantJustCycledCell: { row: number; col: number } | null
+  /** Progress tracking */
+  solvedCount: number
+  totalPuzzles: number
+  totalComponents: number
+  componentsEarned: number
+  /** Toast: components just unlocked (cleared after display) */
+  lastUnlockedComponents: { itemId: string; quantity: number }[]
 
   setPlayer: (player: Player) => void
   setCamera: (camera: Camera) => void
@@ -65,6 +73,8 @@ export type GameState = {
   /** Replace hotbar from API inventory (e.g. after puzzle verify). */
   applyServerInventory: (inventory: InventorySlotConfig[]) => void
   addRewardItems: (items: { itemId: string; quantity: number }[]) => void
+  updateProgress: (solvedCount: number, totalPuzzles: number, totalComponents: number, componentsEarned: number) => void
+  setLastUnlockedComponents: (items: { itemId: string; quantity: number }[]) => void
   cycleVariant: (row: number, col: number) => boolean
   cycleOrientation: (row: number, col: number) => boolean
   clearVariantJustCycled: () => void

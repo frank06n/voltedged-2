@@ -70,7 +70,18 @@ export async function getPuzzleQuestion(
   }
 }
 
-export async function verifyPuzzle(sessionId: string, puzzleId: string, answer: string): Promise<{ success: boolean; message?: string; inventory?: InventorySlotConfig[]; solvedPuzzleIds?: string[] }> {
+export async function verifyPuzzle(sessionId: string, puzzleId: string, answer: string): Promise<{
+  success: boolean;
+  message?: string;
+  inventory?: InventorySlotConfig[];
+  solvedPuzzleIds?: string[];
+  solvedCount?: number;
+  totalPuzzles?: number;
+  totalComponents?: number;
+  componentsEarned?: number;
+  componentsLeft?: number;
+  unlockedComponents?: { itemId: string; quantity: number }[];
+}> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/session/puzzle/verify`, {
       method: 'POST',

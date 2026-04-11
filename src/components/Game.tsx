@@ -22,6 +22,7 @@ import { updatePlayerPosition } from '../systems/movementSystem'
 import { useGameStore } from '../store/gameState'
 import { Hotbar } from './Hotbar'
 import { InteractionModal } from './InteractionModal'
+import { ProgressBar } from './ProgressBar'
 import { World } from './World'
 
 const SYNC_COOLDOWN_MS = 5000    // 5s cooldown for sync
@@ -50,6 +51,9 @@ export function Game({ onLogout }: { onLogout: () => void }) {
 
   const [circuitDone, setCircuitDone] = useState(false)
   const [circuitMsg, setCircuitMsg] = useState('')
+  const [showCongrats, setShowCongrats] = useState(false)
+  const [congratsTime, setCongratsTime] = useState('')
+  const [gameOver, setGameOver] = useState(false)
 
   // Sync button state
   const [syncing, setSyncing] = useState(false)
@@ -100,7 +104,8 @@ export function Game({ onLogout }: { onLogout: () => void }) {
     const res = await completeCircuit(sessionId)
     if (res.success) {
       setCircuitDone(true)
-      setCircuitMsg(`Circuit completed at ${new Date(res.completedAt!).toLocaleTimeString()}`)
+      setCongratsTime(new Date(res.completedAt!).toLocaleTimeString())
+      setShowCongrats(true)
     } else {
       setCircuitMsg(res.message || 'Failed')
       // Start cooldown on failure
@@ -301,18 +306,6 @@ export function Game({ onLogout }: { onLogout: () => void }) {
     setGrid(placed)
   }
 
-  const btnBase: React.CSSProperties = {
-    position: 'absolute',
-    top: '16px',
-    zIndex: 1000,
-    color: 'white',
-    border: 'none',
-    padding: '8px 16px',
-    borderRadius: '4px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-  }
-
   return (
     <div
       ref={containerRef}
@@ -334,56 +327,60 @@ export function Game({ onLogout }: { onLogout: () => void }) {
       />
       <Hotbar />
       <InteractionModal />
+      <ProgressBar />
 
-      {/* Logout */}
-      <button 
-        onClick={handleLogout} 
-        style={{ ...btnBase, right: '16px', background: 'rgba(255, 50, 50, 0.8)' }}
-      >
-        Logout
-      </button>
+      {/* Top-right action buttons */}
+      <div className="game-actions">
+        <button
+          className={`retro-btn ${circuitDone ? 'retro-btn--done' : ''}`}
+          onClick={handleCircuitComplete}
+          disabled={circuitDone || circuitCooldown}
+        >
+          {circuitDone ? 'Circuit Tested' : circuitCooldown ? 'Wait...' : 'Test Circuit'}
+        </button>
 
-      {/* Sync Circuit */}
-      <button
-        onClick={handleSync}
-        disabled={syncing || syncCooldown}
-        style={{
-          ...btnBase,
-          right: '100px',
-          background: syncing ? 'rgba(200, 200, 50, 0.8)' : syncCooldown ? 'rgba(100, 100, 100, 0.6)' : 'rgba(50, 200, 150, 0.8)',
-          cursor: (syncing || syncCooldown) ? 'default' : 'pointer',
-        }}
-      >
-        {syncing ? 'Syncing…' : syncCooldown ? 'Wait…' : '⟳ Sync'}
-      </button>
+        <button
+          className={`retro-btn ${syncing ? 'retro-btn--active' : ''}`}
+          onClick={handleSync}
+          disabled={syncing || syncCooldown}
+        >
+          {syncing ? 'Saving...' : syncCooldown ? 'Wait...' : 'Save'}
+        </button>
 
-      {/* Complete Circuit */}
-      <button
-        onClick={handleCircuitComplete}
-        disabled={circuitDone || circuitCooldown}
-        style={{
-          ...btnBase,
-          right: '200px',
-          background: circuitDone ? 'rgba(50, 200, 50, 0.8)' : circuitCooldown ? 'rgba(100, 100, 100, 0.6)' : 'rgba(50, 150, 255, 0.8)',
-          cursor: (circuitDone || circuitCooldown) ? 'default' : 'pointer',
-        }}
-      >
-        {circuitDone ? '✓ Circuit Done' : circuitCooldown ? 'Wait 10s…' : 'Complete Circuit'}
-      </button>
+        <button
+          className="retro-btn retro-btn--danger"
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
+      </div>
 
       {/* Status messages */}
       {(syncMsg || circuitMsg) && (
-        <div style={{
-          position: 'absolute',
-          top: '56px',
-          right: '100px',
-          zIndex: 1000,
-          background: 'rgba(0,0,0,0.7)',
-          color: 'white',
-          padding: '4px 12px',
-          borderRadius: '4px',
-          fontSize: '0.85rem'
-        }}>{syncMsg || circuitMsg}</div>
+        <div className="game-status-msg">{syncMsg || circuitMsg}</div>
+      )}
+
+      {/* Congrats popup on circuit completion */}
+      {showCongrats && (
+        <div className="congrats-overlay" onClick={() => { setShowCongrats(false); setGameOver(true); }}>
+          <div className="congrats-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="congrats-title">Circuit Complete</div>
+            <div className="congrats-subtitle">Your team successfully built and tested the circuit</div>
+            <div className="congrats-time">Completed at {congratsTime}</div>
+            <button className="congrats-dismiss" onClick={() => { setShowCongrats(false); setGameOver(true); }}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {gameOver && (
+        <div className="game-over-overlay">
+          <div className="game-over-content">
+            <div className="game-over-title">THANKS FOR PLAYING!</div>
+            <div className="game-over-credit">made with ❤ by Power Engineering UG2</div>
+          </div>
+        </div>
       )}
     </div>
   )

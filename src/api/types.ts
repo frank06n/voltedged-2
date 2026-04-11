@@ -25,6 +25,11 @@ export type SessionConfig = {
   placedItems: PlacedItem[]
   solvedPuzzleIds: string[]
   circuitCompletedAt: string | null
+  /** Progress fields */
+  solvedCount: number
+  totalPuzzles: number
+  totalComponents: number
+  componentsEarned: number
 }
 
 export type SessionUpdate = {

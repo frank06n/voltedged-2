@@ -5,6 +5,10 @@ import {
   syncSessionToApi,
   verifyPuzzle,
 } from '../api/sessionApi'
+import {
+  getComponentDisplayName,
+  getComponentImage,
+} from '../data/itemDefinitions'
 import { useGameStore } from '../store/gameState'
 
 type Feedback = 'idle' | 'correct' | 'wrong'
@@ -14,16 +18,20 @@ export function InteractionModal() {
   const setActiveModal = useGameStore((s) => s.setActiveModal)
   const markZoneSolved = useGameStore((s) => s.markZoneSolved)
   const applyServerInventory = useGameStore((s) => s.applyServerInventory)
+  const updateProgress = useGameStore((s) => s.updateProgress)
+  const setLastUnlockedComponents = useGameStore((s) => s.setLastUnlockedComponents)
   const [answer, setAnswer] = useState('')
   const [feedback, setFeedback] = useState<Feedback>('idle')
   const [questionLink, setQuestionLink] = useState<string | null>(null)
   const [questionLoading, setQuestionLoading] = useState(false)
   const [questionError, setQuestionError] = useState<string | null>(null)
+  const [unlockedItems, setUnlockedItems] = useState<{ itemId: string; quantity: number }[]>([])
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     setAnswer('')
     setFeedback('idle')
+    setUnlockedItems([])
   }, [activeModal?.id])
 
   useEffect(() => {
@@ -76,6 +84,7 @@ export function InteractionModal() {
     setActiveModal(null)
     setAnswer('')
     setFeedback('idle')
+    setUnlockedItems([])
   }
 
   const fireSync = () => {
@@ -100,24 +109,37 @@ export function InteractionModal() {
       markZoneSolved(activeModal.id)
       applyServerInventory(res.inventory)
 
+      // Update progress state
+      if (res.solvedCount !== undefined && res.totalPuzzles !== undefined && res.totalComponents !== undefined && res.componentsEarned !== undefined) {
+        updateProgress(res.solvedCount, res.totalPuzzles, res.totalComponents, res.componentsEarned)
+      }
+
+      // Trigger unlock modal via ProgressBar
+      const unlocked = res.unlockedComponents ?? []
+      if (unlocked.length > 0) {
+        setUnlockedItems(unlocked)
+        setLastUnlockedComponents(unlocked)
+      }
+
       fireSync()
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+      const delay = unlocked.length > 0 ? 2500 : 500
       closeTimerRef.current = window.setTimeout(() => {
         closeTimerRef.current = null
         handleClose()
-      }, 500)
+      }, delay)
     } else {
       setFeedback('wrong')
     }
   }
 
   const questionBlock = questionLoading ? (
-    <p className="modal-question-link">Loading question…</p>
+    <p className="modal-question-link">Loading question...</p>
   ) : questionError ? (
     <p className="modal-question-link modal-question-error">{questionError}</p>
   ) : linkHref ? (
     <p className="modal-question-link">
-      <a href={linkHref} target="_blank" rel="noreferrer">
+      <a href={linkHref} target="_blank" rel="noreferrer" style={{ color: '#50c878' }}>
         Open question document
       </a>
     </p>
@@ -178,6 +200,27 @@ export function InteractionModal() {
         {feedback === 'wrong' ? (
           <p className="modal-feedback modal-feedback-wrong">Try again.</p>
         ) : null}
+
+        {/* Show unlocked components inline */}
+        {feedback === 'correct' && unlockedItems.length > 0 && (
+          <div className="modal-unlocked">
+            <div className="modal-unlocked-label">Component Obtained</div>
+            {unlockedItems.map((item, i) => (
+              <div key={i} className="modal-unlocked-item">
+                {getComponentImage(item.itemId) ? (
+                  <img
+                    src={getComponentImage(item.itemId)}
+                    alt={getComponentDisplayName(item.itemId)}
+                  />
+                ) : null}
+                <span>
+                  {item.quantity}x {getComponentDisplayName(item.itemId)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="modal-actions">
           <button
             type="button"
