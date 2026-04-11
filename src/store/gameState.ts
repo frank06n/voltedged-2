@@ -48,7 +48,7 @@ function puzzlesToZones(
         width: loc.width,
         height: loc.height,
         question: '',
-        rewardItems: loc.rewardItems,
+        rewardItems: loc.rewardItems ?? [],
         solved: solvedIds.includes(id),
       }
     })
@@ -101,8 +101,14 @@ export const useGameStore = create<GameState>((set) => ({
   activeModal: null,
   sessionId: null,
   teamName: null,
+  shift: 1,
   solvedPuzzleIds: [],
   variantJustCycledCell: null,
+  solvedCount: 0,
+  totalPuzzles: 10,
+  totalComponents: 0,
+  componentsEarned: 0,
+  lastUnlockedComponents: [],
 
   setPlayer: (player) => set({ player }),
   setCamera: (camera) => set({ camera }),
@@ -148,8 +154,14 @@ export const useGameStore = create<GameState>((set) => ({
       activeModal: null,
       sessionId: config.sessionId,
       teamName: config.teamName,
+      shift: config.shift ?? 1,
       solvedPuzzleIds: [...config.solvedPuzzleIds],
       variantJustCycledCell: null,
+      solvedCount: config.solvedCount ?? config.solvedPuzzleIds.length,
+      totalPuzzles: config.totalPuzzles ?? 10,
+      totalComponents: config.totalComponents ?? 0,
+      componentsEarned: config.componentsEarned ?? 0,
+      lastUnlockedComponents: [],
     })
   },
 
@@ -292,4 +304,9 @@ export const useGameStore = create<GameState>((set) => ({
   },
 
   clearVariantJustCycled: () => set({ variantJustCycledCell: null }),
+
+  updateProgress: (solvedCount, totalPuzzles, totalComponents, componentsEarned) =>
+    set({ solvedCount, totalPuzzles, totalComponents, componentsEarned }),
+
+  setLastUnlockedComponents: (items) => set({ lastUnlockedComponents: items }),
 }))
