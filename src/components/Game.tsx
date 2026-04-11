@@ -5,6 +5,7 @@ import {
   completeCircuit,
   syncSessionToApi,
 } from '../api/sessionApi'
+import { playPickSfx, playPutSfx } from '../audio/playSfx'
 import { getItemVariantOptions } from '../data/itemDefinitions'
 import { useGameAudio } from '../hooks/useGameAudio'
 import { useGameLoop } from '../hooks/useGameLoop'
@@ -283,6 +284,7 @@ export function Game({ onLogout }: { onLogout: () => void }) {
         const itemId = cell.itemId
         setGrid(removeItem(grid, gridRow, gridCol))
         returnItem(itemId)
+        playPickSfx()
       }
       return
     }
@@ -294,6 +296,7 @@ export function Game({ onLogout }: { onLogout: () => void }) {
         const itemId = cell.itemId
         setGrid(removeItem(grid, gridRow, gridCol))
         returnItem(itemId)
+        playPickSfx()
       }
       return
     }
@@ -321,6 +324,7 @@ export function Game({ onLogout }: { onLogout: () => void }) {
 
     if (!consumeItem(idx)) return
     setGrid(placed)
+    playPutSfx()
   }
 
   return (

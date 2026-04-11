@@ -25,7 +25,7 @@ function zone(
   }
 }
 
-export const SHOW_PLACEMENT_ZONES = true
+export const SHOW_PLACEMENT_ZONES = false
 
 export const PLACEMENT_ZONES: PlacementZone[] = [
   zone('pz-main', 36, 48, 32, 20),
