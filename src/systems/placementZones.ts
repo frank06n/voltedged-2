@@ -28,11 +28,7 @@ function zone(
 export const SHOW_PLACEMENT_ZONES = true
 
 export const PLACEMENT_ZONES: PlacementZone[] = [
-  zone('pz-crossroads', 42, 42, 10, 10),
-  zone('pz-north', 42, 19, 10, 8),
-  zone('pz-east', 63, 42, 10, 10),
-  zone('pz-south', 42, 62, 10, 8),
-  zone('pz-west', 19, 42, 10, 10),
+  zone('pz-main', 36, 48, 32, 20),
 ]
 
 export function isInsidePlacementZone(

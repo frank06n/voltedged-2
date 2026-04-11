@@ -6,6 +6,7 @@ import {
   syncSessionToApi,
 } from '../api/sessionApi'
 import { getItemVariantOptions } from '../data/itemDefinitions'
+import { useGameAudio } from '../hooks/useGameAudio'
 import { useGameLoop } from '../hooks/useGameLoop'
 import { useKeyboard } from '../hooks/useKeyboard'
 import { useMouse } from '../hooks/useMouse'
@@ -28,7 +29,15 @@ import { World } from './World'
 const SYNC_COOLDOWN_MS = 5000    // 5s cooldown for sync
 const CIRCUIT_COOLDOWN_MS = 10000 // 10s cooldown for circuit complete
 
+const MUSIC_STORAGE_KEY = 'voltedge_music_enabled'
+
 export function Game({ onLogout }: { onLogout: () => void }) {
+  const [musicEnabled, setMusicEnabled] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return localStorage.getItem(MUSIC_STORAGE_KEY) !== 'false'
+  })
+  useGameAudio(musicEnabled)
+
   const keysRef = useKeyboard()
   const { mousePos, screenToWorld, worldToGrid } = useMouse()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -62,6 +71,14 @@ export function Game({ onLogout }: { onLogout: () => void }) {
 
   // Circuit cooldown state
   const [circuitCooldown, setCircuitCooldown] = useState(false)
+
+  const toggleMusic = () => {
+    setMusicEnabled((prev) => {
+      const next = !prev
+      localStorage.setItem(MUSIC_STORAGE_KEY, String(next))
+      return next
+    })
+  }
 
   const handleLogout = async () => {
     try {
@@ -327,6 +344,7 @@ export function Game({ onLogout }: { onLogout: () => void }) {
       />
       <Hotbar />
       <InteractionModal />
+<<<<<<< main
       <ProgressBar />
 
       {/* Top-right action buttons */}
@@ -354,6 +372,61 @@ export function Game({ onLogout }: { onLogout: () => void }) {
           Logout
         </button>
       </div>
+=======
+
+      {/* Music */}
+      <button
+        type="button"
+        onClick={toggleMusic}
+        style={{
+          ...btnBase,
+          left: '16px',
+          background: musicEnabled
+            ? 'rgba(80, 120, 200, 0.85)'
+            : 'rgba(80, 80, 80, 0.75)',
+        }}
+        aria-pressed={musicEnabled}
+        title="Background music"
+      >
+        {musicEnabled ? 'Music: On' : 'Music: Off'}
+      </button>
+
+      {/* Logout */}
+      <button 
+        onClick={handleLogout} 
+        style={{ ...btnBase, right: '16px', background: 'rgba(255, 50, 50, 0.8)' }}
+      >
+        Logout
+      </button>
+
+      {/* Sync Circuit */}
+      <button
+        onClick={handleSync}
+        disabled={syncing || syncCooldown}
+        style={{
+          ...btnBase,
+          right: '100px',
+          background: syncing ? 'rgba(200, 200, 50, 0.8)' : syncCooldown ? 'rgba(100, 100, 100, 0.6)' : 'rgba(50, 200, 150, 0.8)',
+          cursor: (syncing || syncCooldown) ? 'default' : 'pointer',
+        }}
+      >
+        {syncing ? 'Syncing…' : syncCooldown ? 'Wait…' : '⟳ Sync'}
+      </button>
+
+      {/* Complete Circuit */}
+      <button
+        onClick={handleCircuitComplete}
+        disabled={circuitDone || circuitCooldown}
+        style={{
+          ...btnBase,
+          right: '200px',
+          background: circuitDone ? 'rgba(50, 200, 50, 0.8)' : circuitCooldown ? 'rgba(100, 100, 100, 0.6)' : 'rgba(50, 150, 255, 0.8)',
+          cursor: (circuitDone || circuitCooldown) ? 'default' : 'pointer',
+        }}
+      >
+        {circuitDone ? '✓ Circuit Done' : circuitCooldown ? 'Wait 10s…' : 'Complete Circuit'}
+      </button>
+>>>>>>> main
 
       {/* Status messages */}
       {(syncMsg || circuitMsg) && (
