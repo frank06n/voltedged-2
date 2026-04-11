@@ -6,6 +6,7 @@ import {
   syncSessionToApi,
 } from '../api/sessionApi'
 import { getItemVariantOptions } from '../data/itemDefinitions'
+import { useGameAudio } from '../hooks/useGameAudio'
 import { useGameLoop } from '../hooks/useGameLoop'
 import { useKeyboard } from '../hooks/useKeyboard'
 import { useMouse } from '../hooks/useMouse'
@@ -27,7 +28,15 @@ import { World } from './World'
 const SYNC_COOLDOWN_MS = 5000    // 5s cooldown for sync
 const CIRCUIT_COOLDOWN_MS = 10000 // 10s cooldown for circuit complete
 
+const MUSIC_STORAGE_KEY = 'voltedge_music_enabled'
+
 export function Game({ onLogout }: { onLogout: () => void }) {
+  const [musicEnabled, setMusicEnabled] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return localStorage.getItem(MUSIC_STORAGE_KEY) !== 'false'
+  })
+  useGameAudio(musicEnabled)
+
   const keysRef = useKeyboard()
   const { mousePos, screenToWorld, worldToGrid } = useMouse()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -58,6 +67,14 @@ export function Game({ onLogout }: { onLogout: () => void }) {
 
   // Circuit cooldown state
   const [circuitCooldown, setCircuitCooldown] = useState(false)
+
+  const toggleMusic = () => {
+    setMusicEnabled((prev) => {
+      const next = !prev
+      localStorage.setItem(MUSIC_STORAGE_KEY, String(next))
+      return next
+    })
+  }
 
   const handleLogout = async () => {
     try {
@@ -334,6 +351,23 @@ export function Game({ onLogout }: { onLogout: () => void }) {
       />
       <Hotbar />
       <InteractionModal />
+
+      {/* Music */}
+      <button
+        type="button"
+        onClick={toggleMusic}
+        style={{
+          ...btnBase,
+          left: '16px',
+          background: musicEnabled
+            ? 'rgba(80, 120, 200, 0.85)'
+            : 'rgba(80, 80, 80, 0.75)',
+        }}
+        aria-pressed={musicEnabled}
+        title="Background music"
+      >
+        {musicEnabled ? 'Music: On' : 'Music: Off'}
+      </button>
 
       {/* Logout */}
       <button 
